@@ -65,7 +65,7 @@ class FormerFriendResult {
 class FormerFriendAnalyzer {
   final DatabaseService _databaseService;
   int? _filterYear;
-  Set<String> _excludedUsernames = {};
+  final Set<String> _excludedUsernames = {};
 
   FormerFriendAnalyzer(
     this._databaseService, {
@@ -200,8 +200,7 @@ class FormerFriendAnalyzer {
         );
 
         // 计算活跃期的统计数据
-        final activeDays =
-            activeEndDate.difference(activeStartDate).inDays + 1;
+        final activeDays = activeEndDate.difference(activeStartDate).inDays + 1;
         final activeDaysCount = longestPeriod['daysCount'] as int;
         final activeMessageCount = longestPeriod['messageCount'] as int;
 
@@ -263,9 +262,7 @@ class FormerFriendAnalyzer {
           activeDaysCount: activeDaysCount,
           activeMessageCount: activeMessageCount,
           lastMessageDate: lastMessageDate,
-          daysSinceActive: daysSinceLastMessage < 0
-              ? 0
-              : daysSinceLastMessage,
+          daysSinceActive: daysSinceLastMessage < 0 ? 0 : daysSinceLastMessage,
           messagesAfterActive: messagesAfterActive,
           afterFrequency: afterFrequency,
         );
@@ -273,7 +270,7 @@ class FormerFriendAnalyzer {
         candidates.add(candidate);
 
         onLog?.call(
-          '候选人: $displayName, 连续聊天$consecutiveDays天, 离别${daysSinceLastMessage}天, 近期频率${recentFrequency.toStringAsFixed(2)}条/天',
+          '候选人: $displayName, 连续聊天$consecutiveDays天, 离别$daysSinceLastMessage天, 近期频率${recentFrequency.toStringAsFixed(2)}条/天',
           level: 'debug',
         );
       } catch (e) {
@@ -294,9 +291,7 @@ class FormerFriendAnalyzer {
       final displayName = candidate.displayName;
 
       // 计算近期频率
-      final recentDays = latestMessageDate
-          .difference(recentPeriodStart)
-          .inDays;
+      final recentDays = latestMessageDate.difference(recentPeriodStart).inDays;
 
       // 重新计算近期消息数
       final messagesByDate = await _databaseService.getSessionMessagesByDate(

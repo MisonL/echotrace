@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -119,16 +118,17 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
           );
 
           if (hardlinkPath == null) {
-            String? decodedPath =
-                await _findDecryptedImageByName(_datName, refresh: false);
+            String? decodedPath = await _findDecryptedImageByName(
+              _datName,
+              refresh: false,
+            );
             if (decodedPath == null && widget.message.imageMd5 != null) {
               decodedPath = await _findDecryptedImageByName(
                 widget.message.imageMd5,
                 refresh: false,
               );
             }
-            if (decodedPath != null &&
-                !await _isImageUsable(decodedPath)) {
+            if (decodedPath != null && !await _isImageUsable(decodedPath)) {
               decodedPath = null;
             }
             _logDebugPaths(decodedPath);
@@ -140,8 +140,7 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
               });
             }
           } else {
-            final preferred =
-                await _resolvePreferredImagePath(hardlinkPath);
+            final preferred = await _resolvePreferredImagePath(hardlinkPath);
             _logDebugPaths(preferred ?? hardlinkPath);
             if (mounted) {
               setState(() {
@@ -153,8 +152,10 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
           }
         } else {
           // 仅 packed_info_data 的情况
-          String? decodedPath =
-              await _findDecryptedImageByName(_datName, refresh: false);
+          String? decodedPath = await _findDecryptedImageByName(
+            _datName,
+            refresh: false,
+          );
           if (decodedPath == null && widget.message.imageMd5 != null) {
             decodedPath = await _findDecryptedImageByName(
               widget.message.imageMd5,
@@ -173,7 +174,6 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
             });
           }
         }
-
       } else {
         if (mounted) {
           setState(() {
@@ -286,8 +286,9 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
   }
 
   Size _resolveLayoutSize(BoxConstraints constraints) {
-    final maxWidth =
-        constraints.hasBoundedWidth ? constraints.maxWidth : _maxImageSize;
+    final maxWidth = constraints.hasBoundedWidth
+        ? constraints.maxWidth
+        : _maxImageSize;
     final base = math.min(maxWidth, _maxImageSize);
     final ratio = _resolveImageAspectRatio();
     return _scaleByAspectRatio(
@@ -308,24 +309,28 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
   Size? _parseImageSizeFromContent() {
     final primary = widget.message.messageContent;
     final secondary = widget.message.compressContent;
-    final width = _extractIntAttribute(primary, const [
-      'cdnthumbwidth',
-      'cdnmidimgwidth',
-      'width',
-    ]) ?? _extractIntAttribute(secondary, const [
-      'cdnthumbwidth',
-      'cdnmidimgwidth',
-      'width',
-    ]);
-    final height = _extractIntAttribute(primary, const [
-      'cdnthumbheight',
-      'cdnmidimgheight',
-      'height',
-    ]) ?? _extractIntAttribute(secondary, const [
-      'cdnthumbheight',
-      'cdnmidimgheight',
-      'height',
-    ]);
+    final width =
+        _extractIntAttribute(primary, const [
+          'cdnthumbwidth',
+          'cdnmidimgwidth',
+          'width',
+        ]) ??
+        _extractIntAttribute(secondary, const [
+          'cdnthumbwidth',
+          'cdnmidimgwidth',
+          'width',
+        ]);
+    final height =
+        _extractIntAttribute(primary, const [
+          'cdnthumbheight',
+          'cdnmidimgheight',
+          'height',
+        ]) ??
+        _extractIntAttribute(secondary, const [
+          'cdnthumbheight',
+          'cdnmidimgheight',
+          'height',
+        ]);
     if (width == null || height == null) return null;
     if (width <= 0 || height <= 0) return null;
     return Size(width.toDouble(), height.toDouble());
@@ -351,8 +356,10 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
       return hardlinkPath;
     }
 
-    String? decodedPath =
-        await _findDecryptedImageByName(_datName, refresh: false);
+    String? decodedPath = await _findDecryptedImageByName(
+      _datName,
+      refresh: false,
+    );
     if (decodedPath == null && widget.message.imageMd5 != null) {
       decodedPath = await _findDecryptedImageByName(
         widget.message.imageMd5,
@@ -464,8 +471,9 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: isFromMe
                                   ? Colors.white.withValues(alpha: 0.9)
-                                  : theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.65),
+                                  : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.65,
+                                    ),
                             ),
                           ),
                         ),
@@ -527,8 +535,10 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
     );
   }
 
-  Future<String?> _findDecryptedImageByName(String? baseName,
-      {bool refresh = false}) async {
+  Future<String?> _findDecryptedImageByName(
+    String? baseName, {
+    bool refresh = false,
+  }) async {
     if (baseName == null || baseName.isEmpty) return null;
     final key = _normalizeBaseName(baseName);
     if (!refresh && _decryptedIndex.containsKey(key)) {
@@ -575,8 +585,7 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
     _invalidImagePaths.clear();
     try {
       final docs = await AppPathService.getDocumentsDirectory();
-      final imagesRoot =
-          Directory(p.join(docs.path, 'EchoTrace', 'Images'));
+      final imagesRoot = Directory(p.join(docs.path, 'EchoTrace', 'Images'));
       if (!await imagesRoot.exists()) return;
 
       List<String> paths;
@@ -660,11 +669,7 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
     return null;
   }
 
-  void _indexDecryptedVariant(
-    String key,
-    _ImageVariant variant,
-    String path,
-  ) {
+  void _indexDecryptedVariant(String key, _ImageVariant variant, String path) {
     final variants = _decryptedVariantIndex.putIfAbsent(key, () => {});
     variants[variant] ??= path;
   }
@@ -808,10 +813,12 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
 
       await appState.ensureImageDisplayNameCache();
 
-      final cachedDecoded =
-          await _findDecryptedImageByName(_datName, refresh: true);
-      final cachedByMd5 = cachedDecoded == null &&
-              widget.message.imageMd5 != null
+      final cachedDecoded = await _findDecryptedImageByName(
+        _datName,
+        refresh: true,
+      );
+      final cachedByMd5 =
+          cachedDecoded == null && widget.message.imageMd5 != null
           ? await _findDecryptedImageByName(
               widget.message.imageMd5,
               refresh: true,
@@ -829,8 +836,10 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
         return;
       }
 
-      final datCandidates =
-          await _searchDatFiles(accountDir, _datName!.toLowerCase());
+      final datCandidates = await _searchDatFiles(
+        accountDir,
+        _datName!.toLowerCase(),
+      );
       if (datCandidates.isEmpty) {
         setState(() {
           _statusMessage = '未找到对应的图片文件（*.dat），源文件没有被下载或已被删除';
@@ -909,12 +918,7 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
             aesKey,
           );
         } catch (e, stack) {
-          await logger.error(
-            'ChatImage',
-            '解密图片失败，尝试下一候选: $datPath',
-            e,
-            stack,
-          );
+          await logger.error('ChatImage', '解密图片失败，尝试下一候选: $datPath', e, stack);
           usedFallback = true;
           continue;
         }
@@ -942,8 +946,7 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
         setState(() {
           _imagePath = validOutput;
           _hasError = false;
-          _statusMessage =
-              usedFallback ? '已降级展示可用版本的图片' : null;
+          _statusMessage = usedFallback ? '已降级展示可用版本的图片' : null;
         });
       }
     } catch (e) {
@@ -968,8 +971,10 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
     final normalized = _normalizeBaseName(targetBase);
     final found = <_ImageVariant, String>{};
     try {
-      await for (final entity
-          in accountDir.list(recursive: true, followLinks: false)) {
+      await for (final entity in accountDir.list(
+        recursive: true,
+        followLinks: false,
+      )) {
         if (entity is! File) continue;
         final name = p.basename(entity.path).toLowerCase();
         if (!name.endsWith('.dat')) continue;
@@ -1005,8 +1010,9 @@ class _ImageMessageWidgetState extends State<ImageMessageWidget> {
 
   Future<void> _loadDisplayName(AppState appState) async {
     try {
-      final names = await appState.databaseService
-          .getDisplayNames([widget.sessionUsername]);
+      final names = await appState.databaseService.getDisplayNames([
+        widget.sessionUsername,
+      ]);
       final name = names[widget.sessionUsername];
       if (name != null && name.trim().isNotEmpty) {
         _displayName = _sanitizeSegment(name);

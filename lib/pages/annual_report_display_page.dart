@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/annual_report/annual_report_html_renderer.dart';
@@ -118,8 +114,9 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
                 ?.map((e) => e.toString())
                 .toList() ??
             <String>[];
-        final cachedExcludedSet =
-            cachedExcluded.map((e) => e.trim().toLowerCase()).toSet();
+        final cachedExcludedSet = cachedExcluded
+            .map((e) => e.trim().toLowerCase())
+            .toSet();
         final excludedChanged =
             cachedExcludedSet.length != _normalizedExcludedUsernames.length ||
             !cachedExcludedSet.containsAll(_normalizedExcludedUsernames);
@@ -134,10 +131,7 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
 
         if (dbChanged || excludedChanged) {
           // 数据库已更新，询问用户
-          await logger.info(
-            'AnnualReportPage',
-            '缓存已过期，显示确认对话框',
-          );
+          await logger.info('AnnualReportPage', '缓存已过期，显示确认对话框');
           if (!mounted) return;
           final shouldRegenerate = await _showDatabaseChangedDialog();
 
@@ -261,8 +255,7 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
 
       // 保存数据库修改时间
       data['dbModifiedTime'] = _dbModifiedTime;
-      data['excludedUsernames'] =
-          _normalizedExcludedUsernames.toList()..sort();
+      data['excludedUsernames'] = _normalizedExcludedUsernames.toList()..sort();
       await logger.debug('AnnualReportPage', '保存数据库修改时间: $_dbModifiedTime');
 
       // 保存到缓存
@@ -345,9 +338,9 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
         _reportData = null;
         _reportHtml = null;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('报告渲染失败: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('报告渲染失败: $e')));
     }
   }
 
@@ -373,8 +366,6 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
       await _openReportInBrowser();
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -490,9 +481,7 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Color(0xFF07C160),
-                  ),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF07C160)),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -621,8 +610,9 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           ElevatedButton.icon(
-                            onPressed:
-                                _isOpeningBrowser ? null : _openReportInBrowser,
+                            onPressed: _isOpeningBrowser
+                                ? null
+                                : _openReportInBrowser,
                             icon: _isOpeningBrowser
                                 ? const SizedBox(
                                     width: 16,
@@ -644,15 +634,12 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
                           ),
                           const SizedBox(width: 12),
                           OutlinedButton.icon(
-                            onPressed:
-                                _isHtmlLoading ? null : _refreshPreview,
+                            onPressed: _isHtmlLoading ? null : _refreshPreview,
                             icon: const Icon(Icons.refresh),
                             label: const Text('刷新预览'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF07C160),
-                              side: const BorderSide(
-                                color: Color(0xFF07C160),
-                              ),
+                              side: const BorderSide(color: Color(0xFF07C160)),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 20,
                                 vertical: 12,
@@ -689,9 +676,9 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
       setState(() {});
     }
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('预览已刷新，请在浏览器中刷新页面')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('预览已刷新，请在浏览器中刷新页面')));
     }
   }
 
@@ -713,15 +700,15 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
         mode: LaunchMode.externalApplication,
       );
       if (!launched && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('无法打开浏览器，请检查默认浏览器设置')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('无法打开浏览器，请检查默认浏览器设置')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('打开浏览器失败: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('打开浏览器失败: $e')));
       }
     } finally {
       if (mounted) {
@@ -774,15 +761,17 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: widget.showAppBar ? AppBar(
-          title: Text(
-            '$yearText年度报告',
-            style: const TextStyle(fontFamily: 'HarmonyOS Sans SC'),
-          ),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          foregroundColor: Colors.black87,
-        ) : null,
+        appBar: widget.showAppBar
+            ? AppBar(
+                title: Text(
+                  '$yearText年度报告',
+                  style: const TextStyle(fontFamily: 'HarmonyOS Sans SC'),
+                ),
+                backgroundColor: Colors.white,
+                elevation: 0,
+                foregroundColor: Colors.black87,
+              )
+            : null,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -849,15 +838,17 @@ class _AnnualReportDisplayPageState extends State<AnnualReportDisplayPage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: widget.showAppBar ? AppBar(
-          title: Text(
-            '生成$yearText年度报告',
-            style: const TextStyle(fontFamily: 'HarmonyOS Sans SC'),
-          ),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          foregroundColor: Colors.black87,
-        ) : null,
+        appBar: widget.showAppBar
+            ? AppBar(
+                title: Text(
+                  '生成$yearText年度报告',
+                  style: const TextStyle(fontFamily: 'HarmonyOS Sans SC'),
+                ),
+                backgroundColor: Colors.white,
+                elevation: 0,
+                foregroundColor: Colors.black87,
+              )
+            : null,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),

@@ -21,7 +21,7 @@ class AnnualReportHtmlRenderer {
     _fontCache ??= await _loadFonts();
     final fonts = _fontCache!;
 
-    final yearText = year != null ? '${year}年' : '历史以来';
+    final yearText = year != null ? '$year年' : '历史以来';
     final numberFormat = NumberFormat.decimalPattern();
 
     // --- 数据准备 ---
@@ -29,31 +29,44 @@ class AnnualReportHtmlRenderer {
     final totalFriends = _parseNum(reportData['totalFriends']).toInt();
 
     final List<dynamic> coreFriendsJson = reportData['coreFriends'] ?? [];
-    final coreFriends = coreFriendsJson.map((e) => FriendshipRanking.fromJson(e)).toList();
+    final coreFriends = coreFriendsJson
+        .map((e) => FriendshipRanking.fromJson(e))
+        .toList();
     final topFriend = coreFriends.isNotEmpty ? coreFriends.first : null;
 
     final List<dynamic> confidantJson = reportData['confidant'] ?? [];
-    final confidants = confidantJson.map((e) => FriendshipRanking.fromJson(e)).toList();
+    final confidants = confidantJson
+        .map((e) => FriendshipRanking.fromJson(e))
+        .toList();
     final topConfidant = confidants.isNotEmpty ? confidants.first : null;
 
     final List<dynamic> listenersJson = reportData['listeners'] ?? [];
-    final listeners = listenersJson.map((e) => FriendshipRanking.fromJson(e)).toList();
+    final listeners = listenersJson
+        .map((e) => FriendshipRanking.fromJson(e))
+        .toList();
     final topListener = listeners.isNotEmpty ? listeners.first : null;
 
-    final List<dynamic> monthlyTopFriends = (reportData['monthlyTopFriends'] as List?) ?? [];
+    final List<dynamic> monthlyTopFriends =
+        (reportData['monthlyTopFriends'] as List?) ?? [];
     final selfAvatarUrl = reportData['selfAvatarUrl'] as String? ?? '';
 
     final List<dynamic> mutualFriendsJson = reportData['mutualFriends'] ?? [];
-    final mutualFriends = mutualFriendsJson.map((e) => FriendshipRanking.fromJson(e)).toList();
+    final mutualFriends = mutualFriendsJson
+        .map((e) => FriendshipRanking.fromJson(e))
+        .toList();
 
     final socialDataJson = reportData['socialInitiative'];
     final socialData = socialDataJson is Map<String, dynamic>
         ? SocialStyleData.fromJson(socialDataJson)
         : SocialStyleData(initiativeRanking: []);
-    final socialTop = socialData.initiativeRanking.isNotEmpty ? socialData.initiativeRanking.first : null;
+    final socialTop = socialData.initiativeRanking.isNotEmpty
+        ? socialData.initiativeRanking.first
+        : null;
 
     final peakDayJson = reportData['peakDay'];
-    final ChatPeakDay? peakDay = peakDayJson is Map<String, dynamic> ? ChatPeakDay.fromJson(peakDayJson) : null;
+    final ChatPeakDay? peakDay = peakDayJson is Map<String, dynamic>
+        ? ChatPeakDay.fromJson(peakDayJson)
+        : null;
 
     final checkIn = reportData['checkIn'] as Map<String, dynamic>? ?? {};
     final checkInDays = _parseNum(checkIn['days']).toInt();
@@ -62,12 +75,15 @@ class AnnualReportHtmlRenderer {
     final checkInEnd = _formatDate(checkIn['endDate'] as String?);
 
     final activityJson = reportData['activityPattern'];
-    final ActivityHeatmap? activity = activityJson is Map<String, dynamic> ? ActivityHeatmap.fromJson(activityJson) : null;
+    final ActivityHeatmap? activity = activityJson is Map<String, dynamic>
+        ? ActivityHeatmap.fromJson(activityJson)
+        : null;
     final mostActive = activity?.getMostActiveTime();
     final mostActiveHour = mostActive?['hour'];
     final mostActiveWeekday = mostActive?['weekday'];
 
-    final midnightKing = reportData['midnightKing'] as Map<String, dynamic>? ?? {};
+    final midnightKing =
+        reportData['midnightKing'] as Map<String, dynamic>? ?? {};
     final midnightName = midnightKing['displayName'] ?? '未知';
     final midnightCount = _parseNum(midnightKing['count']).toInt();
     final midnightPctVal = _parseNum(midnightKing['percentage']);
@@ -77,7 +93,8 @@ class AnnualReportHtmlRenderer {
     final myFastestReplies = (reportData['myFastestReplies'] as List?) ?? [];
 
     final formerFriends = (reportData['formerFriends'] as List?) ?? [];
-    final formerFriendsStats = reportData['formerFriendsStats'] as Map<String, dynamic>?;
+    final formerFriendsStats =
+        reportData['formerFriendsStats'] as Map<String, dynamic>?;
     final includeFormerFriends = year == null;
 
     // --- HTML 构建 ---
@@ -86,61 +103,128 @@ class AnnualReportHtmlRenderer {
     buffer.writeln('<html lang="zh-CN">');
     buffer.writeln('<head>');
     buffer.writeln('<meta charset="utf-8" />');
-    buffer.writeln('<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />');
-    buffer.writeln('<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>');
+    buffer.writeln(
+      '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />',
+    );
+    buffer.writeln(
+      '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>',
+    );
     buffer.writeln('<style>');
     buffer.writeln(_buildCss(fonts['regular']!, fonts['bold']!));
     buffer.writeln('</style>');
     buffer.writeln('</head>');
     buffer.writeln('<body>');
-    
-    buffer.writeln('<main class="main-container" id="capture">'); 
+
+    buffer.writeln('<main class="main-container" id="capture">');
     buffer.writeln(_buildNav());
 
     buffer.writeln(_section('cover', 'cover', _buildCoverBody(yearText)));
 
-    buffer.writeln(_section('intro', 'intro', 
-      _buildIntroBody(numberFormat, totalFriends, totalMessages)));
+    buffer.writeln(
+      _section(
+        'intro',
+        'intro',
+        _buildIntroBody(numberFormat, totalFriends, totalMessages),
+      ),
+    );
 
-    buffer.writeln(_section('friendship', 'friendship', 
-      _buildFriendshipBody(numberFormat, topFriend, topConfidant, topListener)));
+    buffer.writeln(
+      _section(
+        'friendship',
+        'friendship',
+        _buildFriendshipBody(
+          numberFormat,
+          topFriend,
+          topConfidant,
+          topListener,
+        ),
+      ),
+    );
 
-    buffer.writeln(_section('monthly', 'monthly', 
-      _buildMonthlyBody(yearText, monthlyTopFriends, selfAvatarUrl)));
+    buffer.writeln(
+      _section(
+        'monthly',
+        'monthly',
+        _buildMonthlyBody(yearText, monthlyTopFriends, selfAvatarUrl),
+      ),
+    );
 
-    buffer.writeln(_section('mutual', 'mutual', 
-      _buildMutualBody(numberFormat, mutualFriends)));
+    buffer.writeln(
+      _section(
+        'mutual',
+        'mutual',
+        _buildMutualBody(numberFormat, mutualFriends),
+      ),
+    );
 
-    buffer.writeln(_section('initiative', 'initiative', 
-      _buildSocialBody(socialTop)));
+    buffer.writeln(
+      _section('initiative', 'initiative', _buildSocialBody(socialTop)),
+    );
 
-    buffer.writeln(_section('peak', 'peak-day', 
-      _buildPeakBody(numberFormat, peakDay)));
+    buffer.writeln(
+      _section('peak', 'peak-day', _buildPeakBody(numberFormat, peakDay)),
+    );
 
-    buffer.writeln(_section('checkin', 'checkin', 
-      _buildCheckInBody(numberFormat, checkInName, checkInDays, checkInStart, checkInEnd)));
+    buffer.writeln(
+      _section(
+        'checkin',
+        'checkin',
+        _buildCheckInBody(
+          numberFormat,
+          checkInName,
+          checkInDays,
+          checkInStart,
+          checkInEnd,
+        ),
+      ),
+    );
 
     final activityText = (mostActiveHour != null && mostActiveWeekday != null)
         ? '在 <span class="hl">${_weekdayName(mostActiveWeekday)} ${mostActiveHour.toString().padLeft(2, '0')}:00</span> 最活跃'
         : '暂无作息数据';
-    buffer.writeln(_section('activity', 'activity', 
-      _buildActivityBody(activityText, activity)));
+    buffer.writeln(
+      _section(
+        'activity',
+        'activity',
+        _buildActivityBody(activityText, activity),
+      ),
+    );
 
-    buffer.writeln(_section('midnight', 'midnight', 
-      _buildMidnightBody(numberFormat, midnightName, midnightCount, midnightPercentage)));
+    buffer.writeln(
+      _section(
+        'midnight',
+        'midnight',
+        _buildMidnightBody(
+          numberFormat,
+          midnightName,
+          midnightCount,
+          midnightPercentage,
+        ),
+      ),
+    );
 
-    buffer.writeln(_section('response', 'response', 
-      _buildResponseHtml(whoRepliesFastest, myFastestReplies)));
+    buffer.writeln(
+      _section(
+        'response',
+        'response',
+        _buildResponseHtml(whoRepliesFastest, myFastestReplies),
+      ),
+    );
 
     if (includeFormerFriends) {
-      buffer.writeln(_section('former', 'former', 
-        _buildFormerBody(formerFriends, formerFriendsStats, numberFormat)));
+      buffer.writeln(
+        _section(
+          'former',
+          'former',
+          _buildFormerBody(formerFriends, formerFriendsStats, numberFormat),
+        ),
+      );
     }
 
     buffer.writeln(_section('ending', 'ending', _buildEndingBody()));
 
     buffer.writeln('</main>');
-    
+
     buffer.writeln('''
       <div id="modal" class="modal">
         <div class="modal-content">
@@ -164,8 +248,12 @@ class AnnualReportHtmlRenderer {
   }
 
   static Future<Map<String, String>> _loadFonts() async {
-    final regular = await rootBundle.load('assets/HarmonyOS_SansSC/HarmonyOS_SansSC_Regular.ttf');
-    final bold = await rootBundle.load('assets/HarmonyOS_SansSC/HarmonyOS_SansSC_Bold.ttf');
+    final regular = await rootBundle.load(
+      'assets/HarmonyOS_SansSC/HarmonyOS_SansSC_Regular.ttf',
+    );
+    final bold = await rootBundle.load(
+      'assets/HarmonyOS_SansSC/HarmonyOS_SansSC_Bold.ttf',
+    );
     return {
       'regular': base64Encode(regular.buffer.asUint8List()),
       'bold': base64Encode(bold.buffer.asUint8List()),
@@ -438,7 +526,12 @@ section.page.visible .content-wrapper {
 ''';
   }
 
-  static String _buildFriendshipBody(NumberFormat fmt, FriendshipRanking? top, FriendshipRanking? confidant, FriendshipRanking? listener) {
+  static String _buildFriendshipBody(
+    NumberFormat fmt,
+    FriendshipRanking? top,
+    FriendshipRanking? confidant,
+    FriendshipRanking? listener,
+  ) {
     if (top == null) return '<div class="hero-title">暂无数据</div>';
     final confidantSent = confidant?.count ?? 0;
     final confidantReceived = confidant?.details?['receivedCount'] as int? ?? 0;
@@ -456,7 +549,11 @@ section.page.visible .content-wrapper {
 ''';
   }
 
-  static String _buildMonthlyBody(String yearText, List<dynamic> monthlyTopFriends, String selfAvatarUrl) {
+  static String _buildMonthlyBody(
+    String yearText,
+    List<dynamic> monthlyTopFriends,
+    String selfAvatarUrl,
+  ) {
     final items = <String>[];
 
     for (var i = 0; i < 12; i++) {
@@ -469,12 +566,14 @@ section.page.visible .content-wrapper {
         }
       }
       final displayName = (data['displayName'] as String?)?.trim();
-      final name = (displayName == null || displayName.isEmpty) ? '暂无' : displayName;
+      final name = (displayName == null || displayName.isEmpty)
+          ? '暂无'
+          : displayName;
       final avatarUrl = (data['avatarUrl'] as String?) ?? '';
       final index = month - 1;
       items.add('''
 <div class="monthly-item" style="--i: $index;">
-  <div class="month-label">${month}月</div>
+  <div class="month-label">$month月</div>
   ${_buildAvatarHtml(avatarUrl, name, sizeClass: '')}
   <div class="month-name">${_escapeHtml(name)}</div>
 </div>
@@ -496,7 +595,10 @@ section.page.visible .content-wrapper {
 ''';
   }
 
-  static String _buildMutualBody(NumberFormat fmt, List<FriendshipRanking> friends) {
+  static String _buildMutualBody(
+    NumberFormat fmt,
+    List<FriendshipRanking> friends,
+  ) {
     if (friends.isEmpty) return '<div class="hero-title">暂无数据</div>';
     final f = friends.first;
     final ratio = f.details?['ratio'] ?? '1.0';
@@ -529,7 +631,13 @@ section.page.visible .content-wrapper {
 ''';
   }
 
-static String _buildCheckInBody(NumberFormat fmt, String name, int days, String? start, String? end) {
+  static String _buildCheckInBody(
+    NumberFormat fmt,
+    String name,
+    int days,
+    String? start,
+    String? end,
+  ) {
     return '''
 <div class="label-text">持之以恒</div>
 <div class="hero-title">聊天火花</div>
@@ -563,7 +671,12 @@ $heatmap
 ''';
   }
 
-  static String _buildMidnightBody(NumberFormat fmt, String name, int count, String pct) {
+  static String _buildMidnightBody(
+    NumberFormat fmt,
+    String name,
+    int count,
+    String pct,
+  ) {
     return '''
 <div class="label-text">深夜好友</div>
 <div class="hero-title">当城市睡去</div>
@@ -575,20 +688,24 @@ $heatmap
   static String _buildResponseHtml(List fastest, List myFastest) {
     String buildList(List items, String title) {
       if (items.isEmpty) return '';
-      final rows = items.take(3).map((e) {
-        final name = _escapeHtml(e['displayName'] ?? '-');
-        final min = _parseNum(e['avgResponseTimeMinutes']).toDouble();
-        String timeStr;
-        if (min < 1.0) {
-          final seconds = (min * 60).round();
-          timeStr = '${seconds}秒';
-        } else {
-          timeStr = '${min.toStringAsFixed(0)}分钟';
-        }
-        return '<div class="list-item"><div class="item-name">$name</div><div class="item-val">$timeStr</div></div>';
-      }).join('');
+      final rows = items
+          .take(3)
+          .map((e) {
+            final name = _escapeHtml(e['displayName'] ?? '-');
+            final min = _parseNum(e['avgResponseTimeMinutes']).toDouble();
+            String timeStr;
+            if (min < 1.0) {
+              final seconds = (min * 60).round();
+              timeStr = '$seconds秒';
+            } else {
+              timeStr = '${min.toStringAsFixed(0)}分钟';
+            }
+            return '<div class="list-item"><div class="item-name">$name</div><div class="item-val">$timeStr</div></div>';
+          })
+          .join('');
       return '<div><div class="label-text" style="margin-bottom:20px;">$title</div>$rows</div>';
     }
+
     return '''
 <div class="label-text">回应速度</div>
 <div class="hero-title">念念不忘，必有回响</div>
@@ -604,13 +721,16 @@ $heatmap
         final sessionsWithMessages = stats['sessionsWithMessages'] as int? ?? 0;
         final sessionsUnder14Days = stats['sessionsUnder14Days'] as int? ?? 0;
         if (totalSessions > 0 && sessionsWithMessages > 0) {
-           if (sessionsUnder14Days == sessionsWithMessages) {
-             message = '${AnnualReportTexts.formerFriendInsufficientData}<br/>${AnnualReportTexts.formerFriendInsufficientDataDetail}';
-           } else if (sessionsUnder14Days > 0) {
-             message = '${AnnualReportTexts.formerFriendNoQualified}<br/>有 $sessionsUnder14Days 个好友聊天记录不足14天<br/>其他好友未符合条件';
-           } else {
-             message = '${AnnualReportTexts.formerFriendNoQualified}<br/>${AnnualReportTexts.formerFriendAllGoodRelations}';
-           }
+          if (sessionsUnder14Days == sessionsWithMessages) {
+            message =
+                '${AnnualReportTexts.formerFriendInsufficientData}<br/>${AnnualReportTexts.formerFriendInsufficientDataDetail}';
+          } else if (sessionsUnder14Days > 0) {
+            message =
+                '${AnnualReportTexts.formerFriendNoQualified}<br/>有 $sessionsUnder14Days 个好友聊天记录不足14天<br/>其他好友未符合条件';
+          } else {
+            message =
+                '${AnnualReportTexts.formerFriendNoQualified}<br/>${AnnualReportTexts.formerFriendAllGoodRelations}';
+          }
         }
       }
       return '<div class="label-text">旧日足迹</div><div class="hero-title">无需追忆</div><div class="hero-desc">$message</div>';
@@ -648,14 +768,23 @@ $heatmap
     for (var w = 1; w <= 7; w++) {
       for (var h = 0; h < 24; h++) {
         final val = activity.getNormalizedValue(h, w);
-        final alpha = (val * 0.9 + 0.05).clamp(0.05, 1.0); 
-        cells.add('<div class="h-cell" style="background: rgba(7, 193, 96, $alpha)"></div>');
+        final alpha = (val * 0.9 + 0.05).clamp(0.05, 1.0);
+        cells.add(
+          '<div class="h-cell" style="background: rgba(7, 193, 96, $alpha)"></div>',
+        );
       }
     }
-    
-    final weeks = ['周一','周二','周三','周四','周五','周六','周日']
-        .map((e) => '<div class="week-label">$e</div>').join('');
-    
+
+    final weeks = [
+      '周一',
+      '周二',
+      '周三',
+      '周四',
+      '周五',
+      '周六',
+      '周日',
+    ].map((e) => '<div class="week-label">$e</div>').join('');
+
     return '''
 <div class="heatmap-wrapper">
   <div class="heatmap-header">
@@ -679,13 +808,29 @@ $heatmap
 </div>
 ''';
   }
-  
-  static String _formatDate(String? s) => s?.split('T').first ?? '-';
-  static String _weekdayName(int? w) => const {1:'周一',2:'周二',3:'周三',4:'周四',5:'周五',6:'周六',7:'周日'}[w] ?? '';
-  static String _escapeHtml(String s) => const HtmlEscape(HtmlEscapeMode.element).convert(s);
-  static String _escapeHtmlWithBreaks(String s) => _escapeHtml(s).replaceAll('\n', '<br/>');
 
-  static String _buildAvatarHtml(String? url, String name, {String sizeClass = ''}) {
+  static String _formatDate(String? s) => s?.split('T').first ?? '-';
+  static String _weekdayName(int? w) =>
+      const {
+        1: '周一',
+        2: '周二',
+        3: '周三',
+        4: '周四',
+        5: '周五',
+        6: '周六',
+        7: '周日',
+      }[w] ??
+      '';
+  static String _escapeHtml(String s) =>
+      const HtmlEscape(HtmlEscapeMode.element).convert(s);
+  static String _escapeHtmlWithBreaks(String s) =>
+      _escapeHtml(s).replaceAll('\n', '<br/>');
+
+  static String _buildAvatarHtml(
+    String? url,
+    String name, {
+    String sizeClass = '',
+  }) {
     final cls = sizeClass.isNotEmpty ? 'avatar $sizeClass' : 'avatar';
     final fallback = _escapeHtml(_initial(name));
     if (url == null || url.trim().isEmpty) {

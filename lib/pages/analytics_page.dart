@@ -152,8 +152,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 ?.map((e) => e.toString().toLowerCase())
                 .toSet() ??
             <String>{};
-        final excludedChanged =
-            !_setEquals(cachedExcluded, _excludedUsernames);
+        final excludedChanged = !_setEquals(cachedExcluded, _excludedUsernames);
 
         if (excludedChanged) {
           await logger.info('AnalyticsPage', '排除名单变化，准备重新分析');
@@ -234,10 +233,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
   Future<void> _ensureExcludedUsernames() async {
     final appState = context.read<AppState>();
-    final hasStored =
-        await appState.configService.hasAnalyticsExcludedUsernames();
-    final stored =
-        await appState.configService.getAnalyticsExcludedUsernames();
+    final hasStored = await appState.configService
+        .hasAnalyticsExcludedUsernames();
+    final stored = await appState.configService.getAnalyticsExcludedUsernames();
 
     final normalized = stored
         .map((name) => name.trim().toLowerCase())
@@ -484,8 +482,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               !_excludedUsernames.contains(s.username.toLowerCase()),
         )
         .toList();
-    final usernames =
-        privateSessions.map((s) => s.username).where((u) => u.isNotEmpty).toSet();
+    final usernames = privateSessions
+        .map((s) => s.username)
+        .where((u) => u.isNotEmpty)
+        .toSet();
     usernames.addAll(_excludedUsernames);
     final displayNames = await widget.databaseService.getDisplayNames(
       usernames.toList(),
@@ -499,19 +499,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     }
     usernames.add('filehelper');
 
-    final entries = usernames
-        .map((username) {
-          final lower = username.toLowerCase();
-          final displayName =
-              lower == 'filehelper'
-                  ? '文件传输助手'
-                  : (displayNames[username] ?? username);
-          return _ExcludeFriendEntry(
-            username: username,
-            displayName: displayName,
-          );
-        })
-        .toList();
+    final entries = usernames.map((username) {
+      final lower = username.toLowerCase();
+      final displayName = lower == 'filehelper'
+          ? '文件传输助手'
+          : (displayNames[username] ?? username);
+      return _ExcludeFriendEntry(username: username, displayName: displayName);
+    }).toList();
 
     final selected = Set<String>.from(_excludedUsernames);
     String searchQuery = '';
@@ -521,23 +515,26 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final visibleEntries = (searchQuery.isEmpty
-                    ? entries
-                    : entries
-                        .where((entry) {
+            final visibleEntries =
+                (searchQuery.isEmpty
+                      ? entries
+                      : entries.where((entry) {
                           final haystack =
                               '${entry.displayName.toLowerCase()} ${entry.username.toLowerCase()}';
                           return haystack.contains(searchQuery);
-                        })
-                        .toList())
-              ..sort((a, b) {
-                final aSelected = selected.contains(a.username.toLowerCase());
-                final bSelected = selected.contains(b.username.toLowerCase());
-                if (aSelected != bSelected) {
-                  return aSelected ? -1 : 1;
-                }
-                return a.displayName.compareTo(b.displayName);
-              });
+                        }).toList())
+                  ..sort((a, b) {
+                    final aSelected = selected.contains(
+                      a.username.toLowerCase(),
+                    );
+                    final bSelected = selected.contains(
+                      b.username.toLowerCase(),
+                    );
+                    if (aSelected != bSelected) {
+                      return aSelected ? -1 : 1;
+                    }
+                    return a.displayName.compareTo(b.displayName);
+                  });
             return AlertDialog(
               title: const Text('选择不统计的好友'),
               content: SizedBox(
@@ -647,7 +644,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -665,26 +661,26 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               child: _isLoading
                   ? _buildLoadingView()
                   : _showAnnualReportSubPage
-                      ? _AnnualReportSubPage(
-                          databaseService: widget.databaseService,
-                          excludedUsernames: _excludedUsernames,
-                          onClose: () {
-                            setState(() => _showAnnualReportSubPage = false);
-                          },
-                        )
-                      : _showDualReportSubPage
-                      ? _DualReportSubPage(
-                          key: _dualReportKey,
-                          databaseService: widget.databaseService,
-                          rankings: _allContactRankings ?? const <ContactRanking>[],
-                          excludedUsernames: _excludedUsernames,
-                          onClose: () {
-                            setState(() => _showDualReportSubPage = false);
-                          },
-                        )
-                      : _overallStats == null
-                          ? _buildEmptyView()
-                          : _buildContent(),
+                  ? _AnnualReportSubPage(
+                      databaseService: widget.databaseService,
+                      excludedUsernames: _excludedUsernames,
+                      onClose: () {
+                        setState(() => _showAnnualReportSubPage = false);
+                      },
+                    )
+                  : _showDualReportSubPage
+                  ? _DualReportSubPage(
+                      key: _dualReportKey,
+                      databaseService: widget.databaseService,
+                      rankings: _allContactRankings ?? const <ContactRanking>[],
+                      excludedUsernames: _excludedUsernames,
+                      onClose: () {
+                        setState(() => _showDualReportSubPage = false);
+                      },
+                    )
+                  : _overallStats == null
+                  ? _buildEmptyView()
+                  : _buildContent(),
             ),
           ),
         ],
@@ -1172,13 +1168,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       return const SizedBox.shrink();
     }
 
-    final allRankings =
-        (_allContactRankings ?? _contactRankings ?? [])
-            .where(
-              (ranking) =>
-                  !_excludedUsernames.contains(ranking.username.toLowerCase()),
-            )
-            .toList();
+    final allRankings = (_allContactRankings ?? _contactRankings ?? [])
+        .where(
+          (ranking) =>
+              !_excludedUsernames.contains(ranking.username.toLowerCase()),
+        )
+        .toList();
     final query = _contactSearchQuery.trim().toLowerCase();
     final visibleRankings = query.isEmpty
         ? allRankings.take(_topN).toList()
@@ -1421,7 +1416,6 @@ class _AnnualReportSubPage extends StatefulWidget {
   final VoidCallback onClose;
 
   const _AnnualReportSubPage({
-    super.key,
     required this.databaseService,
     required this.excludedUsernames,
     required this.onClose,
@@ -1606,13 +1600,13 @@ class _AnnualReportSubPageState extends State<_AnnualReportSubPage> {
                           onPressed: isLoading
                               ? null
                               : () {
-                            Navigator.of(context).pop(
-                              _YearSelectionResult(
-                                year: tempSelection,
-                                confirmed: true,
-                              ),
-                            );
-                          },
+                                  Navigator.of(context).pop(
+                                    _YearSelectionResult(
+                                      year: tempSelection,
+                                      confirmed: true,
+                                    ),
+                                  );
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF07C160),
                             foregroundColor: Colors.white,
@@ -1742,7 +1736,9 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
   }
 
   void _disposeReportIsolate({bool canceled = false}) {
-    if (canceled && _reportCompleter != null && !_reportCompleter!.isCompleted) {
+    if (canceled &&
+        _reportCompleter != null &&
+        !_reportCompleter!.isCompleted) {
       _reportCompleter!.completeError(StateError('report canceled'));
     }
     _reportSubscription?.cancel();
@@ -1914,7 +1910,7 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
 
       final yearlyStats =
           (reportData['yearlyStats'] as Map?)?.cast<String, dynamic>() ??
-              <String, dynamic>{};
+          <String, dynamic>{};
       await logger.debug(
         'DualReportPage',
         'yearlyStats emoji: my=${yearlyStats['myTopEmojiMd5'] ?? 'null'} '
@@ -1936,11 +1932,8 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
             'DualReportPage',
             'top emoji missing, recompute in main isolate: friend=$friendUsername year=$actualYear',
           );
-          final topEmoji =
-              await widget.databaseService.getSessionYearlyTopEmojiMd5(
-            friendUsername,
-            actualYear,
-          );
+          final topEmoji = await widget.databaseService
+              .getSessionYearlyTopEmojiMd5(friendUsername, actualYear);
           yearlyStats['myTopEmojiMd5'] = topEmoji['myTopEmojiMd5'];
           yearlyStats['friendTopEmojiMd5'] = topEmoji['friendTopEmojiMd5'];
           yearlyStats['myTopEmojiUrl'] = topEmoji['myTopEmojiUrl'];
@@ -2050,15 +2043,15 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
         mode: LaunchMode.externalApplication,
       );
       if (!launched && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('无法打开浏览器，请检查默认浏览器设置')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('无法打开浏览器，请检查默认浏览器设置')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('打开浏览器失败: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('打开浏览器失败: $e')));
       }
     } finally {
       if (mounted) {
@@ -2072,9 +2065,9 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
     await _buildReportHtml(_reportData!);
     await _startReportServer();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('预览已刷新，请在浏览器中刷新页面')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('预览已刷新，请在浏览器中刷新页面')));
     }
   }
 
@@ -2084,10 +2077,7 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     _reportServer = server;
     _reportUrl = 'http://127.0.0.1:${server.port}/';
-    await logger.debug(
-      'DualReportPage',
-      'report server started: $_reportUrl',
-    );
+    await logger.debug('DualReportPage', 'report server started: $_reportUrl');
     server.listen((request) async {
       if (request.uri.path == '/favicon.ico') {
         request.response.statusCode = HttpStatus.noContent;
@@ -2148,7 +2138,6 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
     _handleBack();
   }
 
-  
   Map<String, dynamic> _cloneForCache(Map<String, dynamic> data) {
     try {
       return jsonDecode(jsonEncode(data)) as Map<String, dynamic>;
@@ -2158,8 +2147,8 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
   }
 
   void _stripEmojiDataUrls(Map<String, dynamic> reportData) {
-    final yearlyStats =
-        (reportData['yearlyStats'] as Map?)?.cast<String, dynamic>();
+    final yearlyStats = (reportData['yearlyStats'] as Map?)
+        ?.cast<String, dynamic>();
     if (yearlyStats == null || yearlyStats.isEmpty) return;
     yearlyStats.remove('myTopEmojiDataUrl');
     yearlyStats.remove('friendTopEmojiDataUrl');
@@ -2170,7 +2159,7 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
     try {
       final yearlyStats =
           (reportData['yearlyStats'] as Map?)?.cast<String, dynamic>() ??
-              <String, dynamic>{};
+          <String, dynamic>{};
       if (yearlyStats.isEmpty) return;
 
       await logger.debug(
@@ -2189,9 +2178,11 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
       final myUrl = yearlyStats['myTopEmojiUrl'] as String?;
       final friendMd5 = yearlyStats['friendTopEmojiMd5'] as String?;
       final friendUrl = yearlyStats['friendTopEmojiUrl'] as String?;
-      final hasMy = (myMd5 != null && myMd5.isNotEmpty) ||
+      final hasMy =
+          (myMd5 != null && myMd5.isNotEmpty) ||
           (myUrl != null && myUrl.isNotEmpty);
-      final hasFriend = (friendMd5 != null && friendMd5.isNotEmpty) ||
+      final hasFriend =
+          (friendMd5 != null && friendMd5.isNotEmpty) ||
           (friendUrl != null && friendUrl.isNotEmpty);
       if (!hasMy && !hasFriend) {
         await logger.debug(
@@ -2201,10 +2192,12 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
         return;
       }
 
-      final myPath =
-          await _ensureEmojiCached(emojiDir, myMd5, myUrl ?? '');
-      final friendPath =
-          await _ensureEmojiCached(emojiDir, friendMd5, friendUrl ?? '');
+      final myPath = await _ensureEmojiCached(emojiDir, myMd5, myUrl ?? '');
+      final friendPath = await _ensureEmojiCached(
+        emojiDir,
+        friendMd5,
+        friendUrl ?? '',
+      );
 
       await logger.debug(
         'DualReportPage',
@@ -2415,10 +2408,9 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
     final query = _rankingSearchQuery.trim().toLowerCase();
     final filteredRankings = widget.rankings
         .where(
-          (ranking) =>
-              !widget.excludedUsernames.contains(
-                ranking.username.toLowerCase(),
-              ),
+          (ranking) => !widget.excludedUsernames.contains(
+            ranking.username.toLowerCase(),
+          ),
         )
         .toList();
     final visibleRankings = query.isEmpty
@@ -2554,10 +2546,7 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
                     child: TweenAnimationBuilder<double>(
                       duration: const Duration(milliseconds: 600),
                       curve: Curves.easeInOut,
-                      tween: Tween<double>(
-                        begin: 0,
-                        end: _totalProgress / 100,
-                      ),
+                      tween: Tween<double>(begin: 0, end: _totalProgress / 100),
                       builder: (context, value, child) {
                         return CircularProgressIndicator(
                           value: value,
@@ -2599,7 +2588,10 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
               layoutBuilder: (currentChild, previousChildren) {
                 return Stack(
                   alignment: Alignment.center,
-                  children: [...previousChildren, if (currentChild != null) currentChild],
+                  children: [
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
                 );
               },
               transitionBuilder: (Widget child, Animation<double> animation) {
@@ -2620,8 +2612,8 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
                         const SizedBox(height: 12),
                         AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 300),
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: _currentTaskStatus == '已完成'
                                     ? _wechatGreen
@@ -2743,10 +2735,7 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
                     const SizedBox(height: 8),
                     Text(
                       '前往浏览器预览',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
@@ -2791,8 +2780,9 @@ class _DualReportSubPageState extends State<_DualReportSubPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton.icon(
-                          onPressed:
-                              _isOpeningBrowser ? null : _openReportInBrowser,
+                          onPressed: _isOpeningBrowser
+                              ? null
+                              : _openReportInBrowser,
                           icon: _isOpeningBrowser
                               ? const SizedBox(
                                   width: 16,

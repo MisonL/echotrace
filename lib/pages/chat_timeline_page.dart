@@ -99,8 +99,7 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
 
       for (var i = 0; i < privateSessions.length; i++) {
         final session = privateSessions[i];
-        final displayName =
-            displayNames[session.username] ?? session.username;
+        final displayName = displayNames[session.username] ?? session.username;
 
         if (!mounted) return;
         setState(() {
@@ -189,9 +188,7 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
   DateTime? get _maxEnd {
     final segments = _visibleSegments;
     if (segments.isEmpty) return null;
-    return segments.map((e) => e.end).reduce(
-      (a, b) => a.isAfter(b) ? a : b,
-    );
+    return segments.map((e) => e.end).reduce((a, b) => a.isAfter(b) ? a : b);
   }
 
   @override
@@ -205,8 +202,8 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
             child: _isLoading
                 ? _buildLoadingView()
                 : _friends.isEmpty
-                    ? _buildEmptyView()
-                    : _buildContent(),
+                ? _buildEmptyView()
+                : _buildContent(),
           ),
         ],
       ),
@@ -235,9 +232,9 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
           const SizedBox(width: 12),
           Text(
             '聊天时间线',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           if (!_isLoading)
@@ -269,9 +266,9 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
             const SizedBox(height: 32),
             Text(
               _loadingStatus,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -279,11 +276,10 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
               Text(
                 '$_processedCount / $_totalCount',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.6),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
               ),
           ],
         ),
@@ -300,18 +296,16 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
           const SizedBox(height: 16),
           Text(
             '暂无时间线数据',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(color: Colors.grey[400]),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: Colors.grey[400]),
           ),
           const SizedBox(height: 8),
           Text(
             '请先连接数据库',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: Colors.grey[400]),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[400]),
           ),
         ],
       ),
@@ -329,8 +323,10 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
         if (event is PointerScrollEvent && _isZooming()) {
           final delta = event.scrollDelta.dy;
           setState(() {
-            _timeScale = (_timeScale + (-delta * 0.002))
-                .clamp(_minScale, _maxScale);
+            _timeScale = (_timeScale + (-delta * 0.002)).clamp(
+              _minScale,
+              _maxScale,
+            );
           });
         }
       },
@@ -344,10 +340,7 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
           if (segments.isEmpty)
             _buildNoVisibleData()
           else
-            _TimelineAxis(
-              segments: segments,
-              daySpacing: daySpacing,
-            ),
+            _TimelineAxis(segments: segments, daySpacing: daySpacing),
         ],
       ),
     );
@@ -368,10 +361,9 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.12),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -387,18 +379,17 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
                   Text(
                     '时间线概览',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '已选 ${_selectedUsernames.length} 位好友 · 连续段 ${segments.length} · 共 ${totalDays} 天',
+                    '已选 ${_selectedUsernames.length} 位好友 · 连续段 ${segments.length} · 共 $totalDays 天',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.6),
-                        ),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
                   ),
                 ],
               ),
@@ -410,21 +401,19 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
                   Text(
                     _formatDate(minStart),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.6),
-                        ),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _formatDate(maxEnd),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.6),
-                        ),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
                   ),
                 ],
               ),
@@ -444,18 +433,17 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
         },
         title: Text(
           '筛选好友 ($selectedCount)',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
           '勾选需要渲染的好友，按住 Ctrl 滚轮缩放时间轴',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.6),
-              ),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
         ),
         children: [
           Padding(
@@ -486,14 +474,14 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
                   children: [
                     TextButton(
                       onPressed: () {
-                    setState(() {
-                      _selectedUsernames
-                        ..clear()
-                        ..addAll(_friends.map((e) => e.username));
-                    });
-                  },
-                  child: const Text('全选'),
-                ),
+                        setState(() {
+                          _selectedUsernames
+                            ..clear()
+                            ..addAll(_friends.map((e) => e.username));
+                        });
+                      },
+                      child: const Text('全选'),
+                    ),
                     TextButton(
                       onPressed: () {
                         setState(() => _selectedUsernames.clear());
@@ -528,11 +516,10 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
         child: Text(
           '没有匹配的好友',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.6),
-              ),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
         ),
       );
     }
@@ -565,11 +552,10 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
           subtitle: Text(
             '活跃 ${entry.activeDates.length} 天 · 连续段 ${_buildSegments(entry).length}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.6),
-                ),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
           ),
         );
       },
@@ -577,10 +563,12 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
   }
 
   bool _isZooming() {
-    return HardwareKeyboard.instance.logicalKeysPressed
-            .contains(LogicalKeyboardKey.controlLeft) ||
-        HardwareKeyboard.instance.logicalKeysPressed
-            .contains(LogicalKeyboardKey.controlRight);
+    return HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.controlLeft,
+        ) ||
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.controlRight,
+        );
   }
 
   Widget _buildNoVisibleData() {
@@ -591,11 +579,10 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
           child: Text(
             '没有符合条件的活跃日期',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.6),
-                ),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
           ),
         ),
       ),
@@ -802,10 +789,7 @@ class _TimelineSegmentRow extends StatelessWidget {
         children: [
           Expanded(
             child: alignLeft
-                ? Align(
-                    alignment: Alignment.centerRight,
-                    child: friendChip,
-                  )
+                ? Align(alignment: Alignment.centerRight, child: friendChip)
                 : const SizedBox.shrink(),
           ),
           SizedBox(
@@ -840,15 +824,11 @@ class _TimelineSegmentRow extends StatelessWidget {
                 ),
                 Positioned(
                   top: 6,
-                  child: _AxisLabel(
-                    label: _formatDate(segment.start),
-                  ),
+                  child: _AxisLabel(label: _formatDate(segment.start)),
                 ),
                 Positioned(
                   bottom: 6,
-                  child: _AxisLabel(
-                    label: _formatDate(segment.end),
-                  ),
+                  child: _AxisLabel(label: _formatDate(segment.end)),
                 ),
                 Positioned(
                   top: 0,
@@ -864,10 +844,7 @@ class _TimelineSegmentRow extends StatelessWidget {
           Expanded(
             child: alignLeft
                 ? const SizedBox.shrink()
-                : Align(
-                    alignment: Alignment.centerLeft,
-                    child: friendChip,
-                  ),
+                : Align(alignment: Alignment.centerLeft, child: friendChip),
           ),
         ],
       ),
@@ -956,10 +933,7 @@ class _AxisDot extends StatelessWidget {
         color: color,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: 6,
-          ),
+          BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 6),
         ],
       ),
     );
@@ -976,17 +950,16 @@ class _AxisLabel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withValues(alpha: 0.7),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

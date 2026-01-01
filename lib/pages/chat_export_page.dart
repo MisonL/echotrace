@@ -1214,7 +1214,9 @@ class _ChatExportPageState extends State<ChatExportPage>
                             style: TextStyle(fontSize: 14),
                           ),
                           contentPadding: EdgeInsets.zero,
-                          activeColor: Theme.of(context).colorScheme.primary,
+                          activeThumbColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                         ),
                         if (!_useAllTime)
                           InkWell(
@@ -1312,7 +1314,9 @@ class _ChatExportPageState extends State<ChatExportPage>
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                             ),
-                            activeColor: Theme.of(context).colorScheme.primary,
+                            activeThumbColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
                           ),
                           Divider(
                             height: 1,
@@ -1322,7 +1326,8 @@ class _ChatExportPageState extends State<ChatExportPage>
                           CheckboxListTile(
                             value: _exportImages,
                             onChanged: _exportMedia
-                                ? (v) => setState(() => _exportImages = v ?? false)
+                                ? (v) =>
+                                      setState(() => _exportImages = v ?? false)
                                 : null,
                             title: const Text('图片'),
                             subtitle: const Text(
@@ -1341,7 +1346,8 @@ class _ChatExportPageState extends State<ChatExportPage>
                           CheckboxListTile(
                             value: _exportVoices,
                             onChanged: _exportMedia
-                                ? (v) => setState(() => _exportVoices = v ?? false)
+                                ? (v) =>
+                                      setState(() => _exportVoices = v ?? false)
                                 : null,
                             title: const Text('语音'),
                             subtitle: const Text(
@@ -1360,7 +1366,8 @@ class _ChatExportPageState extends State<ChatExportPage>
                           CheckboxListTile(
                             value: _exportEmojis,
                             onChanged: _exportMedia
-                                ? (v) => setState(() => _exportEmojis = v ?? false)
+                                ? (v) =>
+                                      setState(() => _exportEmojis = v ?? false)
                                 : null,
                             title: const Text('表情'),
                             subtitle: const Text(
@@ -1399,7 +1406,7 @@ class _ChatExportPageState extends State<ChatExportPage>
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                         ),
-                        activeColor: Theme.of(context).colorScheme.primary,
+                        activeThumbColor: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -1666,8 +1673,7 @@ class _ExportProgressDialogState extends State<_ExportProgressDialog> {
             _exportedCountNotifier.value = scannedCount;
             if (totalToScan > 0) {
               setState(() {
-                _progress =
-                    (scannedCount / totalToScan).clamp(0.0, 1.0) * 0.85;
+                _progress = (scannedCount / totalToScan).clamp(0.0, 1.0) * 0.85;
               });
             }
           },
@@ -1696,7 +1702,8 @@ class _ExportProgressDialogState extends State<_ExportProgressDialog> {
           final effectiveTotal = total > 0 ? total : totalToScan;
           if (effectiveTotal > 0) {
             final ratio = (current / effectiveTotal).clamp(0.0, 1.0);
-            final phaseWeight = stage == '写入文件...' ||
+            final phaseWeight =
+                stage == '写入文件...' ||
                     stage == '保存工作簿...' ||
                     stage == '构建头像索引...'
                 ? 0.98
@@ -1717,7 +1724,10 @@ class _ExportProgressDialogState extends State<_ExportProgressDialog> {
         }
         final savePath = widget.exportMedia
             ? p.join(exportDir, '$safeName.${widget.format}')
-            : p.join(widget.exportFolder, '${safeName}_$timestamp.${widget.format}');
+            : p.join(
+                widget.exportFolder,
+                '${safeName}_$timestamp.${widget.format}',
+              );
         final mediaOptions = widget.exportMedia
             ? MediaExportOptions(
                 exportImages: widget.exportImages,
@@ -1824,27 +1834,21 @@ class _ExportProgressDialogState extends State<_ExportProgressDialog> {
     final uri = Uri.directory(path);
     try {
       if (Platform.isWindows) {
-        unawaited(Process.start(
-          'explorer',
-          [path],
-          mode: ProcessStartMode.detached,
-        ));
+        unawaited(
+          Process.start('explorer', [path], mode: ProcessStartMode.detached),
+        );
         return;
       }
       if (Platform.isMacOS) {
-        unawaited(Process.start(
-          'open',
-          [path],
-          mode: ProcessStartMode.detached,
-        ));
+        unawaited(
+          Process.start('open', [path], mode: ProcessStartMode.detached),
+        );
         return;
       }
       if (Platform.isLinux) {
-        unawaited(Process.start(
-          'xdg-open',
-          [path],
-          mode: ProcessStartMode.detached,
-        ));
+        unawaited(
+          Process.start('xdg-open', [path], mode: ProcessStartMode.detached),
+        );
         return;
       }
 
@@ -2097,12 +2101,12 @@ class _ExportProgressDialogState extends State<_ExportProgressDialog> {
                           ),
                           Column(
                             children: [
-                          Text(
-                            '已导出媒体(总计)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade400,
-                            ),
+                              Text(
+                                '已导出媒体(总计)',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade400,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               _AnimatedCountText(

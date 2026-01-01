@@ -40,8 +40,9 @@ class ImageFileInfo {
 class AppState extends ChangeNotifier {
   final DatabaseService databaseService = DatabaseService();
   final ConfigService configService = ConfigService();
-  late final VoiceMessageService voiceService =
-      VoiceMessageService(databaseService);
+  late final VoiceMessageService voiceService = VoiceMessageService(
+    databaseService,
+  );
 
   BulkJobHandle? _activeBulkJob;
 
@@ -92,7 +93,7 @@ class AppState extends ChangeNotifier {
   bool _isLoadingImages = false;
   int _scannedDecryptedCount = 0;
   bool _imageScanCompleted = false;
-  Map<String, String> _imageDisplayNameCache = {};
+  final Map<String, String> _imageDisplayNameCache = {};
 
   List<ImageFileInfo> get imageFiles => _imageFiles;
   bool get isLoadingImages => _isLoadingImages;
@@ -129,10 +130,10 @@ class AppState extends ChangeNotifier {
     try {
       await logger.info('AppState', '开始后台扫描图片文件...');
 
-      final documentsPath =
-          await AppPathService.getDocumentsPath(configService: configService);
-      final systemDocumentsPath =
-          await AppPathService.getSystemDocumentsPath();
+      final documentsPath = await AppPathService.getDocumentsPath(
+        configService: configService,
+      );
+      final systemDocumentsPath = await AppPathService.getSystemDocumentsPath();
 
       String? configuredPath = await configService.getDatabasePath();
       final manualWxid = await configService.getManualWxid();
@@ -146,13 +147,20 @@ class AppState extends ChangeNotifier {
       await _prepareImageDisplayNameCache();
 
       // 扫描图片文件
-      await _scanImagePath(configuredPath, documentsPath, manualWxid: manualWxid);
+      await _scanImagePath(
+        configuredPath,
+        documentsPath,
+        manualWxid: manualWxid,
+      );
 
       // 按文件大小排序
       _imageFiles.sort((a, b) => a.fileSize.compareTo(b.fileSize));
 
       _imageScanCompleted = true;
-      await logger.info('AppState', '图片扫描完成，共找到 ${_imageFiles.length} 个文件，已解密 $_scannedDecryptedCount 个');
+      await logger.info(
+        'AppState',
+        '图片扫描完成，共找到 ${_imageFiles.length} 个文件，已解密 $_scannedDecryptedCount 个',
+      );
     } catch (e, stackTrace) {
       await logger.error('AppState', '图片扫描失败', e, stackTrace);
     } finally {
@@ -189,19 +197,28 @@ class AppState extends ChangeNotifier {
       final sessions = await databaseService.getSessions();
       if (sessions.isEmpty) return;
 
-      final usernames = sessions.map((s) => s.username).where((u) => u.isNotEmpty).toList();
+      final usernames = sessions
+          .map((s) => s.username)
+          .where((u) => u.isNotEmpty)
+          .toList();
       final displayNames = await databaseService.getDisplayNames(usernames);
 
       _imageDisplayNameCache.clear();
       for (final username in usernames) {
-        final hash = md5.convert(utf8.encode(username)).toString().toLowerCase();
+        final hash = md5
+            .convert(utf8.encode(username))
+            .toString()
+            .toLowerCase();
         final displayName = displayNames[username]?.trim();
         if (displayName == null || displayName.isEmpty) continue;
         _imageDisplayNameCache[hash] = displayName;
         _imageDisplayNameCache['msg_$hash'] = displayName;
       }
 
-      await logger.info('AppState', '已构建图片输出目录映射: ${_imageDisplayNameCache.length} 项');
+      await logger.info(
+        'AppState',
+        '已构建图片输出目录映射: ${_imageDisplayNameCache.length} 项',
+      );
     } catch (e, stackTrace) {
       await logger.warning('AppState', '构建图片展示名映射失败: $e', stackTrace);
     }
@@ -242,7 +259,10 @@ class AppState extends ChangeNotifier {
 
   String _detectImageQuality(String relativePath, int fileSize) {
     final pathLower = relativePath.toLowerCase();
-    final fileNameLower = relativePath.split(Platform.pathSeparator).last.toLowerCase();
+    final fileNameLower = relativePath
+        .split(Platform.pathSeparator)
+        .last
+        .toLowerCase();
 
     if (fileSize < 50 * 1024) return 'thumbnail';
     if (fileSize > 500 * 1024) return 'original';
@@ -289,7 +309,11 @@ class AppState extends ChangeNotifier {
     return false;
   }
 
-  Future<void> _scanImagePath(String basePath, String documentsPath, {String? manualWxid}) async {
+  Future<void> _scanImagePath(
+    String basePath,
+    String documentsPath, {
+    String? manualWxid,
+  }) async {
     final baseDir = Directory(basePath);
     if (!await baseDir.exists()) {
       await logger.warning('AppState', '图片扫描：目录不存在 $basePath');
@@ -302,10 +326,13 @@ class AppState extends ChangeNotifier {
 
     if (lastPart == 'db_storage') {
       if (pathParts.length >= 2) {
-        final accountPath = pathParts.sublist(0, pathParts.length - 1).join(Platform.pathSeparator);
+        final accountPath = pathParts
+            .sublist(0, pathParts.length - 1)
+            .join(Platform.pathSeparator);
         final accountDir = Directory(accountPath);
         if (normalizedManual != null &&
-            _normalizeWxid(accountPath.split(Platform.pathSeparator).last) != normalizedManual) {
+            _normalizeWxid(accountPath.split(Platform.pathSeparator).last) !=
+                normalizedManual) {
           return;
         }
         if (await accountDir.exists()) {
@@ -318,10 +345,12 @@ class AppState extends ChangeNotifier {
 
       for (final entity in entities) {
         if (entity is! Directory) continue;
-        final dbStoragePath = '${entity.path}${Platform.pathSeparator}db_storage';
+        final dbStoragePath =
+            '${entity.path}${Platform.pathSeparator}db_storage';
         if (await Directory(dbStoragePath).exists()) {
           if (normalizedManual != null &&
-              _normalizeWxid(entity.path.split(Platform.pathSeparator).last) != normalizedManual) {
+              _normalizeWxid(entity.path.split(Platform.pathSeparator).last) !=
+                  normalizedManual) {
             continue;
           }
           accountDirs.add(entity);
@@ -334,7 +363,10 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> _scanWxidImageDirectory(Directory wxidDir, String documentsPath) async {
+  Future<void> _scanWxidImageDirectory(
+    Directory wxidDir,
+    String documentsPath,
+  ) async {
     int foundCount = 0;
     int updateThreshold = 0;
 
@@ -344,7 +376,8 @@ class AppState extends ChangeNotifier {
           final filePath = entity.path.toLowerCase();
 
           if (!filePath.endsWith('.dat')) continue;
-          if (filePath.contains('db_storage') || filePath.contains('database')) continue;
+          if (filePath.contains('db_storage') || filePath.contains('database'))
+            continue;
 
           final fileName = entity.path.split(Platform.pathSeparator).last;
           final baseLower = p.basenameWithoutExtension(fileName).toLowerCase();
@@ -355,25 +388,30 @@ class AppState extends ChangeNotifier {
             if (fileSize < 100) continue;
 
             final relativePath = entity.path.replaceFirst(wxidDir.path, '');
-            final outputRelativePath = _applyDisplayNameToRelativePath(relativePath);
+            final outputRelativePath = _applyDisplayNameToRelativePath(
+              relativePath,
+            );
             final imageQuality = _detectImageQuality(relativePath, fileSize);
 
             final outputDir = Directory(
               '$documentsPath${Platform.pathSeparator}EchoTrace${Platform.pathSeparator}Images',
             );
-            final decryptedPath = '${outputDir.path}$outputRelativePath'.replaceAll('.dat', '.jpg');
+            final decryptedPath = '${outputDir.path}$outputRelativePath'
+                .replaceAll('.dat', '.jpg');
             final decryptedExists = await File(decryptedPath).exists();
 
-            _imageFiles.add(ImageFileInfo(
-              originalPath: entity.path,
-              fileName: fileName,
-              fileSize: fileSize,
-              relativePath: outputRelativePath,
-              isDecrypted: decryptedExists,
-              decryptedPath: decryptedPath,
-              version: 0,
-              imageQuality: imageQuality,
-            ));
+            _imageFiles.add(
+              ImageFileInfo(
+                originalPath: entity.path,
+                fileName: fileName,
+                fileSize: fileSize,
+                relativePath: outputRelativePath,
+                isDecrypted: decryptedExists,
+                decryptedPath: decryptedPath,
+                version: 0,
+                imageQuality: imageQuality,
+              ),
+            );
 
             foundCount++;
             if (decryptedExists) _scannedDecryptedCount++;
@@ -441,8 +479,8 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final lastLaunchInterrupted =
-          await configService.wasLastLaunchInterrupted();
+      final lastLaunchInterrupted = await configService
+          .wasLastLaunchInterrupted();
       await configService.markLaunchStarted();
       if (lastLaunchInterrupted) {
         _needsSafeModePrompt = true;
@@ -725,10 +763,7 @@ class AppState extends ChangeNotifier {
           if (session != null) {
             return session;
           }
-          await logger.warning(
-            'AppState',
-            '在指定账号目录未找到 session.db，改为全局扫描',
-          );
+          await logger.warning('AppState', '在指定账号目录未找到 session.db，改为全局扫描');
         } else {
           await logger.warning(
             'AppState',
@@ -787,8 +822,9 @@ class AppState extends ChangeNotifier {
     try {
       await logger.info('AppState', '尝试连接解密后的备份数据库');
 
-      final documentsPath =
-          await AppPathService.getDocumentsPath(configService: configService);
+      final documentsPath = await AppPathService.getDocumentsPath(
+        configService: configService,
+      );
 
       // 查找所有账号目录（不限制必须以 wxid_ 开头）
       final echoTraceDir = Directory(
@@ -828,10 +864,7 @@ class AppState extends ChangeNotifier {
             '根据配置的wxid筛选账号目录，剩余 ${accountDirs.length} 个',
           );
         } else {
-          await logger.error(
-            'AppState',
-            '未找到配置的wxid目录: $manualWxid',
-          );
+          await logger.error('AppState', '未找到配置的wxid目录: $manualWxid');
           throw Exception('未找到配置的wxid目录，请先解密对应账号或重新选择路径');
         }
       }
@@ -895,7 +928,7 @@ class AppState extends ChangeNotifier {
                 );
                 return; // 成功找到并连接
               } else {
-              await logger.warning(
+                await logger.warning(
                   'AppState',
                   '数据库 $fileName 不包含SessionTable',
                 );
@@ -994,14 +1027,17 @@ class AppState extends ChangeNotifier {
     final trimmed = value.trim();
     if (trimmed.isEmpty) return null;
     if (!trimmed.toLowerCase().startsWith('wxid_')) {
-      final suffixMatch =
-          RegExp(r'^(.+)_([a-zA-Z0-9]{4})$').firstMatch(trimmed);
+      final suffixMatch = RegExp(
+        r'^(.+)_([a-zA-Z0-9]{4})$',
+      ).firstMatch(trimmed);
       if (suffixMatch != null) return suffixMatch.group(1);
       return trimmed;
     }
 
-    final match =
-        RegExp(r'^(wxid_[^_]+)', caseSensitive: false).firstMatch(trimmed);
+    final match = RegExp(
+      r'^(wxid_[^_]+)',
+      caseSensitive: false,
+    ).firstMatch(trimmed);
     if (match != null) return match.group(1)!.toLowerCase();
     return trimmed.toLowerCase();
   }

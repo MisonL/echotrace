@@ -165,8 +165,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
         configService: _configService,
       );
       final documentsPath = documentsDir.path;
-      final systemDocumentsPath =
-          await AppPathService.getSystemDocumentsPath();
+      final systemDocumentsPath = await AppPathService.getSystemDocumentsPath();
 
       // 优先使用用户配置的数据库路径
       String? configuredPath = await _configService.getDatabasePath();
@@ -269,14 +268,15 @@ class _DataManagementPageState extends State<DataManagementPage> {
     if (trimmed.isEmpty) return trimmed;
 
     if (trimmed.toLowerCase().startsWith('wxid_')) {
-      final match = RegExp(r'^(wxid_[^_]+)', caseSensitive: false)
-          .firstMatch(trimmed);
+      final match = RegExp(
+        r'^(wxid_[^_]+)',
+        caseSensitive: false,
+      ).firstMatch(trimmed);
       if (match != null) return match.group(1)!;
       return trimmed;
     }
 
-    final suffixMatch =
-        RegExp(r'^(.+)_([a-zA-Z0-9]{4})$').firstMatch(trimmed);
+    final suffixMatch = RegExp(r'^(.+)_([a-zA-Z0-9]{4})$').firstMatch(trimmed);
     if (suffixMatch != null) return suffixMatch.group(1)!;
 
     return trimmed;
@@ -287,14 +287,17 @@ class _DataManagementPageState extends State<DataManagementPage> {
     final trimmed = value.trim();
     if (trimmed.isEmpty) return null;
     if (!trimmed.toLowerCase().startsWith('wxid_')) {
-      final suffixMatch =
-          RegExp(r'^(.+)_([a-zA-Z0-9]{4})$').firstMatch(trimmed);
+      final suffixMatch = RegExp(
+        r'^(.+)_([a-zA-Z0-9]{4})$',
+      ).firstMatch(trimmed);
       if (suffixMatch != null) return suffixMatch.group(1);
       return trimmed;
     }
 
-    final match =
-        RegExp(r'^(wxid_[^_]+)', caseSensitive: false).firstMatch(trimmed);
+    final match = RegExp(
+      r'^(wxid_[^_]+)',
+      caseSensitive: false,
+    ).firstMatch(trimmed);
     if (match != null) return match.group(1)!.toLowerCase();
     return trimmed.toLowerCase();
   }
@@ -383,8 +386,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
             final dbStorageDir = Directory(dbStoragePath);
 
             if (await dbStorageDir.exists()) {
-              final dirName =
-                  entity.path.split(Platform.pathSeparator).last;
+              final dirName = entity.path.split(Platform.pathSeparator).last;
               if (normalizedManual != null &&
                   _normalizeWxid(dirName) != normalizedManual) {
                 continue;
@@ -502,9 +504,9 @@ class _DataManagementPageState extends State<DataManagementPage> {
 
       // 派生密钥（只计算一次）
       _derivedKey ??= await _deriveKeyOnce(
-          key,
-          pendingFiles.first.originalPath,
-        );
+        key,
+        pendingFiles.first.originalPath,
+      );
 
       // 步骤1：强制清理所有页面状态
       if (mounted) {
@@ -1306,14 +1308,23 @@ class _DataManagementPageState extends State<DataManagementPage> {
     final imageFiles = appState.imageFiles;
     if (imageFiles.isEmpty) return '';
 
-    final originalCount = imageFiles.where((f) => f.imageQuality == 'original').length;
-    final thumbnailCount = imageFiles.where((f) => f.imageQuality == 'thumbnail').length;
-    final unknownCount = imageFiles.where((f) => f.imageQuality == 'unknown').length;
+    final originalCount = imageFiles
+        .where((f) => f.imageQuality == 'original')
+        .length;
+    final thumbnailCount = imageFiles
+        .where((f) => f.imageQuality == 'thumbnail')
+        .length;
+    final unknownCount = imageFiles
+        .where((f) => f.imageQuality == 'unknown')
+        .length;
 
     return '原图: $originalCount • 缩略图: $thumbnailCount${unknownCount > 0 ? ' • 未知: $unknownCount' : ''}';
   }
 
-  String _buildImageDecryptedPath(String documentsPath, ImageFileInfo imageFile) {
+  String _buildImageDecryptedPath(
+    String documentsPath,
+    ImageFileInfo imageFile,
+  ) {
     final appState = context.read<AppState>();
     final outputRelativePath = appState.imageDisplayNameCache.isEmpty
         ? imageFile.relativePath
@@ -1394,11 +1405,9 @@ class _DataManagementPageState extends State<DataManagementPage> {
       }
 
       // 直接根据扫描时的 isDecrypted 状态过滤，不再重复检查文件是否存在
-      final documentsPath =
-          (await AppPathService.getDocumentsDirectory(
-            configService: _configService,
-          ))
-              .path;
+      final documentsPath = (await AppPathService.getDocumentsDirectory(
+        configService: _configService,
+      )).path;
       final pendingFiles = filteredFiles.where((f) => !f.isDecrypted).toList();
 
       if (pendingFiles.isEmpty) {
@@ -1416,8 +1425,9 @@ class _DataManagementPageState extends State<DataManagementPage> {
       final concurrency = math.max(2, math.min(8, cpu));
       final wxid = await _configService.getManualWxid();
       final token = appState.tryStartBulkJob(
-        sessionUsername:
-            (wxid != null && wxid.isNotEmpty) ? wxid : 'data_management',
+        sessionUsername: (wxid != null && wxid.isNotEmpty)
+            ? wxid
+            : 'data_management',
         typeLabel: '图片批量解密',
         poolSize: concurrency,
       );
@@ -1530,8 +1540,10 @@ class _DataManagementPageState extends State<DataManagementPage> {
             _isDecryptingImages = false;
             _currentDecryptingImage = '';
             if (_totalImageFiles > 0) {
-              _completedImageFiles =
-                  math.min(_completedImageFiles, _totalImageFiles);
+              _completedImageFiles = math.min(
+                _completedImageFiles,
+                _totalImageFiles,
+              );
             }
           });
         }
@@ -1580,12 +1592,8 @@ class _DataManagementPageState extends State<DataManagementPage> {
 
       final documentsPath = (await AppPathService.getDocumentsDirectory(
         configService: _configService,
-      ))
-          .path;
-      final outputPath = _buildImageDecryptedPath(
-        documentsPath,
-        imageFile,
-      );
+      )).path;
+      final outputPath = _buildImageDecryptedPath(documentsPath, imageFile);
 
       // 创建输出目录
       final outputFile = File(outputPath);
@@ -1646,8 +1654,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
   }
 
   void _syncProgressNotifiers() {
-    final activeKeys =
-        _databaseFiles.map((file) => file.originalPath).toSet();
+    final activeKeys = _databaseFiles.map((file) => file.originalPath).toSet();
     final staleKeys = _progressNotifiers.keys
         .where((key) => !activeKeys.contains(key))
         .toList();
@@ -1699,15 +1706,13 @@ class _DataManagementPageState extends State<DataManagementPage> {
     setState(() {
       _currentSection = section;
     });
-    _sectionNavigatorKey.currentState
-        ?.pushReplacementNamed('/$section');
+    _sectionNavigatorKey.currentState?.pushReplacementNamed('/$section');
   }
 
   Widget _buildSectionSwitcher() {
-    final surfaceTone = Theme.of(context)
-        .colorScheme
-        .surface
-        .withValues(alpha: 0.7);
+    final surfaceTone = Theme.of(
+      context,
+    ).colorScheme.surface.withValues(alpha: 0.7);
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -1762,16 +1767,16 @@ class _DataManagementPageState extends State<DataManagementPage> {
             Text(
               title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade800,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               subtitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1780,10 +1785,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
     );
   }
 
-  Widget _buildStatusBanner({
-    required String message,
-    required bool success,
-  }) {
+  Widget _buildStatusBanner({required String message, required bool success}) {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       padding: const EdgeInsets.all(14),
@@ -1951,17 +1953,11 @@ class _DataManagementPageState extends State<DataManagementPage> {
             children: [
               Text(
                 '$completed / $total',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
               Text(
                 '剩余 ${total - completed}',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
             ],
           ),
@@ -1994,9 +1990,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
                               child: Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: _primaryColor.withValues(
-                                    alpha: 0.1,
-                                  ),
+                                  color: _primaryColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
@@ -2014,9 +2008,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: AnimatedSwitcher(
-                                  duration: const Duration(
-                                    milliseconds: 160,
-                                  ),
+                                  duration: const Duration(milliseconds: 160),
                                   switchInCurve: Curves.easeOutCubic,
                                   switchOutCurve: Curves.easeInCubic,
                                   transitionBuilder: (child, animation) {
@@ -2080,8 +2072,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
                               curve: Curves.easeInOut,
                             ),
                             child: ColoredBox(
-                              color:
-                                  Theme.of(context).scaffoldBackgroundColor,
+                              color: Theme.of(context).scaffoldBackgroundColor,
                               child: ClipRect(child: child),
                             ),
                           );
@@ -2101,8 +2092,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
                               curve: Curves.easeInOut,
                             ),
                             child: ColoredBox(
-                              color:
-                                  Theme.of(context).scaffoldBackgroundColor,
+                              color: Theme.of(context).scaffoldBackgroundColor,
                               child: ClipRect(child: child),
                             ),
                           );
@@ -2120,8 +2110,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
 
   /// 构建数据库解密页面
   Widget _buildDatabaseSection() {
-    final needsUpdateCount =
-        _databaseFiles.where((f) => f.needsUpdate).length;
+    final needsUpdateCount = _databaseFiles.where((f) => f.needsUpdate).length;
     return Column(
       children: [
         Padding(
@@ -2201,57 +2190,51 @@ class _DataManagementPageState extends State<DataManagementPage> {
           child: _isLoading && _databaseFiles.isEmpty
               ? const Center(child: CircularProgressIndicator())
               : _databaseFiles.isEmpty
-                  ? _buildEmptyState(
-                      icon: Icons.folder_open_rounded,
-                      title: '未找到数据库文件',
-                      subtitle: '请检查微信数据目录设置是否正确',
-                    )
-                  : Column(
-                      children: [
-                        _buildAnimatedStatus(
-                          _isDecrypting
-                              ? _buildRitualProgressCard(
-                                  title: '正在解密',
-                                  message: _currentDecryptingFile,
-                                  progress: _totalFiles > 0
-                                      ? _completedFiles / _totalFiles
-                                      : 0,
-                                  completed: _completedFiles,
-                                  total: _totalFiles,
-                                )
-                              : const SizedBox.shrink(),
-                          keyValue: _isDecrypting ? 'db-progress' : 'db-empty',
-                        ),
-                        _buildAnimatedStatus(
-                          _statusMessage != null
-                              ? _buildStatusBanner(
-                                  message: _statusMessage!,
-                                  success: _isSuccess,
-                                )
-                              : const SizedBox.shrink(),
-                          keyValue: _statusMessage == null
-                              ? 'db-status-empty'
-                              : 'db-status-${_statusMessage!}',
-                        ),
-                        Expanded(
-                          child: ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(
-                              20,
-                              8,
-                              20,
-                              20,
-                            ),
-                            itemCount: _databaseFiles.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 10),
-                            itemBuilder: (context, index) {
-                              final file = _databaseFiles[index];
-                              return _buildFileCard(file);
-                            },
-                          ),
-                        ),
-                      ],
+              ? _buildEmptyState(
+                  icon: Icons.folder_open_rounded,
+                  title: '未找到数据库文件',
+                  subtitle: '请检查微信数据目录设置是否正确',
+                )
+              : Column(
+                  children: [
+                    _buildAnimatedStatus(
+                      _isDecrypting
+                          ? _buildRitualProgressCard(
+                              title: '正在解密',
+                              message: _currentDecryptingFile,
+                              progress: _totalFiles > 0
+                                  ? _completedFiles / _totalFiles
+                                  : 0,
+                              completed: _completedFiles,
+                              total: _totalFiles,
+                            )
+                          : const SizedBox.shrink(),
+                      keyValue: _isDecrypting ? 'db-progress' : 'db-empty',
                     ),
+                    _buildAnimatedStatus(
+                      _statusMessage != null
+                          ? _buildStatusBanner(
+                              message: _statusMessage!,
+                              success: _isSuccess,
+                            )
+                          : const SizedBox.shrink(),
+                      keyValue: _statusMessage == null
+                          ? 'db-status-empty'
+                          : 'db-status-${_statusMessage!}',
+                    ),
+                    Expanded(
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                        itemCount: _databaseFiles.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final file = _databaseFiles[index];
+                          return _buildFileCard(file);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ],
     );
@@ -2304,22 +2287,22 @@ class _DataManagementPageState extends State<DataManagementPage> {
                   Text(
                     file.fileName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '账号: ${file.wxidName}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '大小: ${_formatFileSize(file.fileSize)}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                   ValueListenableBuilder<double>(
                     valueListenable: progressNotifier,
@@ -2332,17 +2315,18 @@ class _DataManagementPageState extends State<DataManagementPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
-                                child: _SmoothLinearProgress(
-                                  value: progress,
-                                  minHeight: 5,
-                                  backgroundColor:
-                                      _primaryColor.withValues(alpha: 0.15),
-                                  valueColor: _primaryColor,
-                                  duration: const Duration(milliseconds: 420),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: _SmoothLinearProgress(
+                                value: progress,
+                                minHeight: 5,
+                                backgroundColor: _primaryColor.withValues(
+                                  alpha: 0.15,
                                 ),
+                                valueColor: _primaryColor,
+                                duration: const Duration(milliseconds: 420),
                               ),
+                            ),
                             const SizedBox(height: 6),
                             Text(
                               '解密中 ${(progress * 100).toStringAsFixed(0)}%',
@@ -2380,8 +2364,9 @@ class _DataManagementPageState extends State<DataManagementPage> {
                       child: Text(
                         file.isDecrypted ? '已解密' : '未解密',
                         style: TextStyle(
-                          color:
-                              file.isDecrypted ? _primaryColor : _tertiaryColor,
+                          color: file.isDecrypted
+                              ? _primaryColor
+                              : _tertiaryColor,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -2404,11 +2389,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.update,
-                              size: 12,
-                              color: _updateColor,
-                            ),
+                            Icon(Icons.update, size: 12, color: _updateColor),
                             const SizedBox(width: 4),
                             Text(
                               '有更新',
@@ -2433,8 +2414,8 @@ class _DataManagementPageState extends State<DataManagementPage> {
                       return OutlinedButton(
                         onPressed:
                             (_isLoading || (_isDecrypting && progress == 0))
-                                ? null
-                                : () => _decryptSingle(file),
+                            ? null
+                            : () => _decryptSingle(file),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: _primaryColor,
                           side: BorderSide(
@@ -2448,9 +2429,11 @@ class _DataManagementPageState extends State<DataManagementPage> {
                             vertical: 8,
                           ),
                         ),
-                        child: Text(isBusy
-                            ? '${(progress * 100).toStringAsFixed(0)}%'
-                            : '解密'),
+                        child: Text(
+                          isBusy
+                              ? '${(progress * 100).toStringAsFixed(0)}%'
+                              : '解密',
+                        ),
                       );
                     },
                   ),
@@ -2467,7 +2450,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
     final appState = context.watch<AppState>();
     final isLoadingImages = appState.isLoadingImages;
     final imageFiles = appState.imageFiles;
-    
+
     return Column(
       children: [
         Padding(
@@ -2509,9 +2492,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
                 label: Text(isLoadingImages ? '扫描中' : '刷新'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _primaryColor,
-                  side: BorderSide(
-                    color: _primaryColor.withValues(alpha: 0.4),
-                  ),
+                  side: BorderSide(color: _primaryColor.withValues(alpha: 0.4)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -2525,10 +2506,10 @@ class _DataManagementPageState extends State<DataManagementPage> {
               ElevatedButton.icon(
                 onPressed:
                     (isLoadingImages ||
-                            _isDecryptingImages ||
-                            imageFiles.isEmpty)
-                        ? null
-                        : _decryptAllImages,
+                        _isDecryptingImages ||
+                        imageFiles.isEmpty)
+                    ? null
+                    : _decryptAllImages,
                 icon: _isDecryptingImages
                     ? SizedBox(
                         width: 16,
@@ -2629,9 +2610,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
                         Text(
                           '未找到图片文件',
                           style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: Colors.grey.shade800,
-                              ),
+                              ?.copyWith(color: Colors.grey.shade800),
                         ),
                         const SizedBox(height: 16),
                         Container(
@@ -2639,9 +2618,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
                           decoration: BoxDecoration(
                             color: _surfaceColor,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _borderColor,
-                            ),
+                            border: Border.all(color: _borderColor),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2711,8 +2688,9 @@ class _DataManagementPageState extends State<DataManagementPage> {
                               total: _totalImageFiles,
                             )
                           : const SizedBox.shrink(),
-                      keyValue:
-                          _isDecryptingImages ? 'img-progress' : 'img-empty',
+                      keyValue: _isDecryptingImages
+                          ? 'img-progress'
+                          : 'img-empty',
                     ),
                     _buildAnimatedStatus(
                       _imageStatusMessage != null
@@ -2741,7 +2719,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
     final isLoadingImages = appState.isLoadingImages;
     final imageFiles = appState.imageFiles;
     final scannedDecryptedCount = appState.scannedDecryptedCount;
-    
+
     // 应用过滤
     List<ImageFileInfo> filteredFiles = imageFiles.toList();
 
@@ -2799,12 +2777,14 @@ class _DataManagementPageState extends State<DataManagementPage> {
                                 _resetImageListLimit();
                               });
                             },
-                            activeColor: _primaryColor,
-                            activeTrackColor:
-                                _primaryColor.withValues(alpha: 0.25),
+                            activeThumbColor: _primaryColor,
+                            activeTrackColor: _primaryColor.withValues(
+                              alpha: 0.25,
+                            ),
                             inactiveThumbColor: Colors.grey.shade400,
-                            inactiveTrackColor:
-                                Colors.grey.shade300.withValues(alpha: 0.6),
+                            inactiveTrackColor: Colors.grey.shade300.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -3206,20 +3186,14 @@ class _SectionTab extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? surfaceColor : null,
           borderRadius: BorderRadius.circular(12),
-          border: isSelected
-              ? Border.all(
-                  color: borderColor,
-                )
-              : null,
+          border: isSelected ? Border.all(color: borderColor) : null,
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: isSelected
-                ? accentColor
-                : Colors.grey.shade600,
+            color: isSelected ? accentColor : Colors.grey.shade600,
           ),
         ),
       ),
@@ -3259,10 +3233,7 @@ class _SmoothLinearProgressState extends State<_SmoothLinearProgress>
   void initState() {
     super.initState();
     _currentValue = _clamp(widget.value);
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
     _animation = AlwaysStoppedAnimation<double>(_currentValue);
   }
 
@@ -3282,16 +3253,14 @@ class _SmoothLinearProgressState extends State<_SmoothLinearProgress>
 
   void _animateTo(double target) {
     _controller.stop();
-    _animation = Tween<double>(
-      begin: _currentValue,
-      end: target,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve),
-    )..addListener(() {
-        setState(() {
-          _currentValue = _animation.value;
+    _animation =
+        Tween<double>(begin: _currentValue, end: target).animate(
+          CurvedAnimation(parent: _controller, curve: widget.curve),
+        )..addListener(() {
+          setState(() {
+            _currentValue = _animation.value;
+          });
         });
-      });
     _controller.forward(from: 0);
   }
 
