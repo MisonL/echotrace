@@ -14,6 +14,7 @@ import '../services/database_service.dart';
 import '../services/logger_service.dart';
 import '../services/wxid_scan_service.dart';
 import '../services/app_path_service.dart';
+import '../services/macos_key_extractor_service.dart';
 import '../widgets/toast_overlay.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path/path.dart' as p;
@@ -39,12 +40,14 @@ class _SettingsPageState extends State<SettingsPage>
   final _configService = ConfigService();
   late final DecryptService _decryptService;
   final _wxidScanService = WxidScanService();
+  final _macosKeyExtractor = MacOSKeyExtractorService();
   late final ToastOverlay _toast;
 
   final bool _obscureKey = true;
   final bool _obscureImageXorKey = true;
   final bool _obscureImageAesKey = true;
   bool _isLoading = false;
+  bool _isExtractingKey = false;
   String? _statusMessage;
   bool _isSuccess = false;
   String _databaseMode = 'backup'; // 'backup' 或 'realtime'
@@ -155,7 +158,10 @@ class _SettingsPageState extends State<SettingsPage>
       }
 
       if (candidates.length == 1) {
-        _applyDetectedWxid(candidates.first.wxid, fromPath: candidates.first.path);
+        _applyDetectedWxid(
+          candidates.first.wxid,
+          fromPath: candidates.first.path,
+        );
         // 若根目录框为空则填入
         if (_pathController.text.isEmpty) {
           _pathController.text = path;
@@ -202,8 +208,10 @@ class _SettingsPageState extends State<SettingsPage>
     if (!lower.startsWith('wxid_')) return lower;
 
     // wxid_x_xxx -> wxid_x
-    final match =
-        RegExp(r'^(wxid_[^_]+)', caseSensitive: false).firstMatch(cleaned);
+    final match = RegExp(
+      r'^(wxid_[^_]+)',
+      caseSensitive: false,
+    ).firstMatch(cleaned);
     if (match != null) return match.group(1)!.toLowerCase();
     return lower;
   }
@@ -243,11 +251,7 @@ class _SettingsPageState extends State<SettingsPage>
       }
 
       candidates.add(
-        WxidCandidate(
-          wxid: wxidRaw,
-          modified: modified,
-          path: entity.path,
-        ),
+        WxidCandidate(wxid: wxidRaw, modified: modified, path: entity.path),
       );
     }
 
@@ -338,9 +342,14 @@ class _SettingsPageState extends State<SettingsPage>
       context: context,
       builder: (context) {
         return AlertDialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: const Text('选择微信账号'),
           content: SizedBox(
             width: 360,
@@ -444,9 +453,7 @@ class _SettingsPageState extends State<SettingsPage>
           return;
         }
 
-        dbStorageDir = Directory(
-          p.join(match.path, 'db_storage'),
-        );
+        dbStorageDir = Directory(p.join(match.path, 'db_storage'));
       }
 
       // 在 db_storage 目录中查找 .db 文件
@@ -648,9 +655,12 @@ class _SettingsPageState extends State<SettingsPage>
       _updateScanProgress(msg);
       _logScanDetail(msg);
     }
+
     try {
       handleProgress('正在扫描微信账号目录...');
-      final candidates = await _wxidScanService.scanWxids(onProgress: handleProgress);
+      final candidates = await _wxidScanService.scanWxids(
+        onProgress: handleProgress,
+      );
 
       if (candidates.isEmpty) {
         const failMsg = '扫描失败：未找到微信账号目录';
@@ -694,6 +704,52 @@ class _SettingsPageState extends State<SettingsPage>
     }
   }
 
+  /// macOS 自动提取密钥
+  Future<void> _extractKeyFromMacOS() async {
+    if (!Platform.isMacOS) {
+      _showMessage('此功能仅支持 macOS', false);
+      return;
+    }
+
+    if (_isExtractingKey) return;
+
+    setState(() {
+      _isExtractingKey = true;
+    });
+
+    try {
+      // 检查状态
+      final status = await _macosKeyExtractor.checkStatus();
+
+      if (!status.canExtract) {
+        _showMessage(status.message, false);
+        return;
+      }
+
+      _showMessage('正在提取密钥，请稍候...', true);
+
+      // 提取密钥
+      final key = await _macosKeyExtractor.extractKey();
+
+      if (key != null && key.length == 64) {
+        setState(() {
+          _keyController.text = key;
+        });
+        _showMessage('密钥提取成功！', true);
+      } else {
+        _showMessage('密钥提取失败，请手动输入或检查 SIP 状态', false);
+      }
+    } catch (e) {
+      _showMessage('密钥提取出错: $e', false);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExtractingKey = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -707,7 +763,9 @@ class _SettingsPageState extends State<SettingsPage>
               color: Theme.of(context).colorScheme.surface,
               border: Border(
                 bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -831,46 +889,79 @@ class _SettingsPageState extends State<SettingsPage>
             _buildInputSection(
               context,
               title: '解密密钥',
-              subtitle: '请输入64位十六进制密钥',
-              child: TextFormField(
-                controller: _keyController,
-                obscureText: _obscureKey,
-                decoration: InputDecoration(
-                  hintText: '例如: a1b2c3d4e5f6...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Colors.grey.shade300,
-                      width: 1.5,
+              subtitle: Platform.isMacOS
+                  ? '输入64位十六进制密钥，或点击自动提取'
+                  : '请输入64位十六进制密钥',
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _keyController,
+                    obscureText: _obscureKey,
+                    decoration: InputDecoration(
+                      hintText: '例如: a1b2c3d4e5f6...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2.0,
+                        ),
+                      ),
                     ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return '请输入密钥';
+                      }
+                      if (value.length != 64) {
+                        return '密钥长度必须为64个字符';
+                      }
+                      if (!RegExp(r'^[0-9a-fA-F]+$').hasMatch(value)) {
+                        return '密钥必须为十六进制格式';
+                      }
+                      return null;
+                    },
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Colors.grey.shade300,
-                      width: 1.5,
+                  // macOS 自动提取按钮
+                  if (Platform.isMacOS) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _isExtractingKey
+                            ? null
+                            : _extractKeyFromMacOS,
+                        icon: _isExtractingKey
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.key),
+                        label: Text(
+                          _isExtractingKey ? '正在提取密钥...' : '自动提取密钥 (需禁用SIP)',
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2.0,
-                    ),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '请输入密钥';
-                  }
-                  if (value.length != 64) {
-                    return '密钥长度必须为64个字符';
-                  }
-                  if (!RegExp(r'^[0-9a-fA-F]+$').hasMatch(value)) {
-                    return '密钥必须为十六进制格式';
-                  }
-                  return null;
-                },
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: 24),
@@ -1140,7 +1231,9 @@ class _SettingsPageState extends State<SettingsPage>
         Text(
           subtitle,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
         const SizedBox(height: 12),
@@ -1659,7 +1752,9 @@ class _SettingsPageState extends State<SettingsPage>
             Text(
               '清除后需要重新生成报告',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -1763,9 +1858,9 @@ class _SettingsPageState extends State<SettingsPage>
             Text(
               '清除后需要重新生成报告',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(
-                  alpha: 0.6,
-                ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -1849,9 +1944,8 @@ class _SettingsPageState extends State<SettingsPage>
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -1864,9 +1958,10 @@ class _SettingsPageState extends State<SettingsPage>
                               '日志大小',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.6),
                                   ),
                             ),
                             const SizedBox(height: 4),
@@ -1895,9 +1990,10 @@ class _SettingsPageState extends State<SettingsPage>
                                 '日志条数',
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.6),
                                     ),
                               ),
                             ),
@@ -1928,9 +2024,8 @@ class _SettingsPageState extends State<SettingsPage>
                     ? Theme.of(
                         context,
                       ).colorScheme.primaryContainer.withValues(alpha: 0.3)
-                    : Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    : Theme.of(context).colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
                 border: _debugMode
                     ? Border.all(
@@ -1987,10 +2082,7 @@ class _SettingsPageState extends State<SettingsPage>
                       await logger.setDebugMode(value);
 
                       if (mounted) {
-                        _toast.show(
-                          context,
-                          '调试模式已${value ? "开启" : "关闭"}',
-                        );
+                        _toast.show(context, '调试模式已${value ? "开启" : "关闭"}');
                       }
                     },
                   ),
@@ -2114,7 +2206,9 @@ class _SettingsPageState extends State<SettingsPage>
             Text(
               '此操作将删除所有历史日志记录',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],
