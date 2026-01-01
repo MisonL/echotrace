@@ -25,11 +25,65 @@ class GoDecryptFFI {
     if (Platform.isWindows) {
       _dylib = _loadWindowsDLL();
     } else if (Platform.isMacOS) {
-      _dylib = ffi.DynamicLibrary.open('libgo_decrypt.dylib');
+      _dylib = _loadMacOSDylib();
     } else if (Platform.isLinux) {
       _dylib = ffi.DynamicLibrary.open('libgo_decrypt.so');
     } else {
       throw UnsupportedError('Unsupported platform');
+    }
+  }
+
+  /// 加载 macOS Dylib
+  ffi.DynamicLibrary _loadMacOSDylib() {
+    // 检测当前架构
+    final isArm64 = _isAppleSilicon();
+    final dylibName = isArm64 ? 'libgo_decrypt_arm64.dylib' : 'libgo_decrypt_x64.dylib';
+    
+    // 尝试的位置列表
+    final exePath = Platform.resolvedExecutable;
+    final appDir = exePath.contains('.app/Contents/MacOS/')
+        ? exePath.substring(0, exePath.indexOf('.app/Contents/MacOS/') + '.app'.length)
+        : '';
+    
+    final locations = <String>[
+      // 1. 应用包内 Resources 目录
+      if (appDir.isNotEmpty) '$appDir/Contents/Resources/$dylibName',
+      // 2. 应用包内 Frameworks 目录
+      if (appDir.isNotEmpty) '$appDir/Contents/Frameworks/$dylibName',
+      // 3. 可执行文件同目录
+      '${Platform.resolvedExecutable.substring(0, Platform.resolvedExecutable.lastIndexOf('/'))}/$dylibName',
+      // 4. 当前工作目录
+      dylibName,
+      // 5. assets 目录（开发模式）
+      'assets/dll/$dylibName',
+    ];
+
+    final errors = <String>[];
+    
+    for (final location in locations) {
+      try {
+        return ffi.DynamicLibrary.open(location);
+      } catch (e) {
+        errors.add('  - $location: $e');
+        continue;
+      }
+    }
+
+    throw UnsupportedError(
+      'Failed to load $dylibName\n'
+      '\n'
+      'Attempted locations:\n${errors.join('\n')}\n',
+    );
+  }
+
+  /// 检测是否为 Apple Silicon (arm64)
+  bool _isAppleSilicon() {
+    try {
+      final result = Process.runSync('uname', ['-m']);
+      return result.stdout.toString().trim() == 'arm64';
+    } catch (_) {
+      // 默认返回 false (x64)
+      return false;
     }
   }
 

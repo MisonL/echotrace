@@ -258,7 +258,7 @@ class _SettingsPageState extends State<SettingsPage>
   Future<void> _selectDatabasePath() async {
     try {
       String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
-        dialogTitle: '选择微信数据库根目录 (通常是 xwechat_files)',
+        dialogTitle: '选择微信数据库目录',
       );
 
       if (selectedDirectory != null) {

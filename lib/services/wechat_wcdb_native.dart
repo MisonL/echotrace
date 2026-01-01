@@ -135,7 +135,8 @@ class WeChatWCDBNative {
 
     try {
       if (!Platform.isWindows) {
-        // 当前仅支持 Windows
+        // 实时模式仅支持 Windows
+        // macOS/Linux 用户请使用备份模式（解密后的数据库）
         return false;
       }
 

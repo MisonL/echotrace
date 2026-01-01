@@ -79,25 +79,38 @@ class WxidScanService {
 
   /// 从 login 目录读取各账号最近登录时间
   Future<Map<String, DateTime>> _loadLoginTimes() async {
-    if (!Platform.isWindows) return {};
-    final userProfile = Platform.environment['USERPROFILE'] ?? '';
-    if (userProfile.isEmpty) return {};
+    if (Platform.isWindows) {
+      final userProfile = Platform.environment['USERPROFILE'] ?? '';
+      if (userProfile.isEmpty) return {};
 
-    final loginRoot = Directory(
-      p.join(userProfile, 'AppData', 'Roaming', 'Tencent', 'xwechat', 'login'),
-    );
-    if (!await loginRoot.exists()) return {};
+      final loginRoot = Directory(
+        p.join(
+          userProfile,
+          'AppData',
+          'Roaming',
+          'Tencent',
+          'xwechat',
+          'login',
+        ),
+      );
+      if (!await loginRoot.exists()) return {};
 
-    final Map<String, DateTime> result = {};
-    await for (final entity in loginRoot.list()) {
-      if (entity is! Directory) continue;
-      final wxid = _normalizeWxid(p.basename(entity.path));
-      if (wxid == null) continue;
+      final Map<String, DateTime> result = {};
+      await for (final entity in loginRoot.list()) {
+        if (entity is! Directory) continue;
+        final wxid = _normalizeWxid(p.basename(entity.path));
+        if (wxid == null) continue;
 
-      final latest = await _latestModified(entity);
-      result[wxid] = latest;
+        final latest = await _latestModified(entity);
+        result[wxid] = latest;
+      }
+      return result;
+    } else if (Platform.isMacOS) {
+      // macOS 没有类似 Windows 的 login 目录结构
+      // 直接返回空，使用目录修改时间
+      return {};
     }
-    return result;
+    return {};
   }
 
   Future<DateTime> _latestModified(Directory dir) async {
@@ -115,19 +128,55 @@ class WxidScanService {
     return latest;
   }
 
-  /// 返回优先的 WeChat 目录（xwechat/login 优先，否则 xwechat_files，否则 Documents/WeChat Files）
+  /// 返回优先的 WeChat 目录
   Future<String?> findWeChatFilesRoot() async {
-    final userProfile = Platform.environment['USERPROFILE'] ?? '';
-    if (userProfile.isEmpty) return null;
+    if (Platform.isWindows) {
+      final userProfile = Platform.environment['USERPROFILE'] ?? '';
+      if (userProfile.isEmpty) return null;
 
-    // 数据库根目录优先顺序：xwechat_files -> WeChat Files（不使用 xwechat/login）
-    final dbRoots = <String>[
-      p.join(userProfile, 'Documents', 'xwechat_files'),
-      p.join(userProfile, 'Documents', 'WeChat Files'),
-    ];
+      // 数据库根目录优先顺序：xwechat_files -> WeChat Files
+      final dbRoots = <String>[
+        p.join(userProfile, 'Documents', 'xwechat_files'),
+        p.join(userProfile, 'Documents', 'WeChat Files'),
+      ];
 
-    for (final root in dbRoots) {
-      if (await Directory(root).exists()) return root;
+      for (final root in dbRoots) {
+        if (await Directory(root).exists()) return root;
+      }
+    } else if (Platform.isMacOS) {
+      final home = Platform.environment['HOME'] ?? '';
+      if (home.isEmpty) return null;
+
+      // macOS 微信数据路径 - 优先 xwechat_files
+      final xwechatFiles = p.join(
+        home,
+        'Library',
+        'Containers',
+        'com.tencent.xinWeChat',
+        'Data',
+        'Documents',
+        'xwechat_files',
+      );
+
+      if (await Directory(xwechatFiles).exists()) {
+        return xwechatFiles;
+      }
+
+      // 备选：Application Support 路径
+      final wechatContainer = p.join(
+        home,
+        'Library',
+        'Containers',
+        'com.tencent.xinWeChat',
+        'Data',
+        'Library',
+        'Application Support',
+        'com.tencent.xinWeChat',
+      );
+
+      if (await Directory(wechatContainer).exists()) {
+        return wechatContainer;
+      }
     }
 
     return null;
@@ -135,16 +184,36 @@ class WxidScanService {
 
   /// 组合可能的根目录
   Future<List<String>> _candidateRoots() async {
-    if (!Platform.isWindows) return const [];
     final roots = <String>[];
-    final userProfile = Platform.environment['USERPROFILE'] ?? '';
-    if (userProfile.isNotEmpty) {
-      // 微信4的路径
-      roots.add(p.join(userProfile, 'Documents', 'xwechat_files'));
 
-      // 微信3的路径
-      roots.add(p.join(userProfile, 'Documents', 'WeChat Files'));
+    if (Platform.isWindows) {
+      final userProfile = Platform.environment['USERPROFILE'] ?? '';
+      if (userProfile.isNotEmpty) {
+        // 微信4的路径
+        roots.add(p.join(userProfile, 'Documents', 'xwechat_files'));
+        // 微信3的路径
+        roots.add(p.join(userProfile, 'Documents', 'WeChat Files'));
+      }
+    } else if (Platform.isMacOS) {
+      final home = Platform.environment['HOME'] ?? '';
+      if (home.isNotEmpty) {
+        // macOS 微信 xwechat_files 路径（与 Windows 结构类似）
+        final xwechatFiles = p.join(
+          home,
+          'Library',
+          'Containers',
+          'com.tencent.xinWeChat',
+          'Data',
+          'Documents',
+          'xwechat_files',
+        );
+
+        if (await Directory(xwechatFiles).exists()) {
+          roots.add(xwechatFiles);
+        }
+      }
     }
+
     return roots;
   }
 
@@ -154,14 +223,15 @@ class WxidScanService {
     if (trimmed.isEmpty) return null;
 
     if (trimmed.toLowerCase().startsWith('wxid_')) {
-      final match = RegExp(r'^(wxid_[^_]+)', caseSensitive: false)
-          .firstMatch(trimmed);
+      final match = RegExp(
+        r'^(wxid_[^_]+)',
+        caseSensitive: false,
+      ).firstMatch(trimmed);
       if (match != null) return match.group(1);
       return trimmed;
     }
 
-    final suffixMatch =
-        RegExp(r'^(.+)_([a-zA-Z0-9]{4})$').firstMatch(trimmed);
+    final suffixMatch = RegExp(r'^(.+)_([a-zA-Z0-9]{4})$').firstMatch(trimmed);
     if (suffixMatch != null) return suffixMatch.group(1);
 
     return trimmed;

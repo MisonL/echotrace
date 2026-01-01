@@ -250,6 +250,20 @@ class VoiceMessageService {
   }
 
   Future<_BinaryPaths> _ensureBinariesReady() async {
+    // macOS 暂不支持语音解码（需要 silk_v3_decoder 的 macOS 版本）
+    if (Platform.isMacOS) {
+      throw VoiceDecodingNotSupportedException(
+        'macOS 暂不支持语音消息解码。'
+        '语音解码需要 silk_v3_decoder 的 macOS 版本，目前仅支持 Windows。',
+      );
+    }
+    
+    if (!Platform.isWindows) {
+      throw VoiceDecodingNotSupportedException(
+        '当前平台不支持语音消息解码。',
+      );
+    }
+
     final docs = await AppPathService.getDocumentsDirectory();
     final binDir = Directory(PathUtils.join(docs.path, 'EchoTrace', 'bin'));
     if (!await binDir.exists()) {
@@ -533,4 +547,13 @@ class SelfSentVoiceNotSupportedException implements Exception {
   @override
   String toString() =>
       'SelfSentVoiceNotSupportedException: Cannot decrypt self-sent voice messages';
+}
+
+class VoiceDecodingNotSupportedException implements Exception {
+  VoiceDecodingNotSupportedException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'VoiceDecodingNotSupportedException: $message';
 }

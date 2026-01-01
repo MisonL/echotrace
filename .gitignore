@@ -50,3 +50,6 @@ go_decrypt/go.sum
 *.so
 go_decrypt/*.h
 /wcdb/
+
+# 保留 assets/dll 中的 dylib（macOS 解密库）
+!assets/dll/*.dylib
