@@ -53,3 +53,6 @@ go_decrypt/*.h
 
 # 保留 assets/dll 中的 dylib（macOS 解密库）
 !assets/dll/*.dylib
+
+# Temporary analysis reports
+analysis.txt
