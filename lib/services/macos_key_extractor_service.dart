@@ -31,8 +31,10 @@ class MacOSKeyExtractorService {
       return KeyExtractorStatus(
         canExtract: false,
         message:
-            '系统完整性保护 (SIP) 已启用，无法自动提取密钥。\n\n'
-            '请在恢复模式下运行 "csrutil disable" 禁用 SIP，或手动输入密钥。',
+            '系统调试限制已启用，无法提取密钥。\n\n'
+            '请重启进入恢复模式，在终端运行以下命令允许调试：\n'
+            'csrutil enable --without debug\n\n'
+            '或者完全禁用 SIP (不推荐): csrutil disable',
         sipEnabled: true,
         wechatRunning: wechatRunning,
         wechatPid: wechatPid,
@@ -90,12 +92,23 @@ class MacOSKeyExtractorService {
     }
   }
 
-  /// 检查 SIP 是否启用
+  /// 检查 SIP/调试限制 是否启用
   Future<bool> _checkSipEnabled() async {
     try {
       final result = await Process.run('csrutil', ['status']);
       final output = result.stdout.toString().toLowerCase();
-      return output.contains('enabled') && !output.contains('disabled');
+
+      // 检查具体的调试限制
+      if (output.contains('debugging restrictions: enabled')) {
+        return true;
+      }
+
+      // 标准启用状态也隐含调试限制
+      if (output.contains('system integrity protection status: enabled')) {
+        return true;
+      }
+
+      return false;
     } catch (e) {
       await logger.warning(_tag, '无法检查 SIP 状态: $e');
       return true; // 默认假设启用
