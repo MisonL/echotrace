@@ -89,8 +89,9 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget>
     _durationLoading = true;
     try {
       final appState = context.read<AppState>();
-      final seconds =
-          await appState.voiceService.fetchDurationSeconds(widget.message);
+      final seconds = await appState.voiceService.fetchDurationSeconds(
+        widget.message,
+      );
       if (!mounted) return;
       if (seconds != null && seconds > 0) {
         setState(() {
@@ -108,8 +109,9 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget>
 
   int? _durationFromDisplayContent() {
     final content = widget.message.displayContent;
-    final match = RegExp(r'语音\\s*([0-9]+(?:\\.[0-9]+)?)\\s*秒')
-        .firstMatch(content);
+    final match = RegExp(
+      r'语音\\s*([0-9]+(?:\\.[0-9]+)?)\\s*秒',
+    ).firstMatch(content);
     if (match == null) return null;
     final raw = double.tryParse(match.group(1)!);
     if (raw == null || raw <= 0) return null;
@@ -225,9 +227,11 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget>
         }
       }
       if (_filePath != null) {
+        if (!mounted) return;
         _toast.show(context, '解密完成，但UI未及时更新，已恢复语音文件');
         return;
       }
+      if (!mounted) return;
       _toast.show(context, '解密语音失败: $e', success: false);
     } finally {
       if (mounted) {

@@ -36,7 +36,9 @@ class AnalyticsCacheService {
       await prefs.setString(_keyBasicAnalytics, json.encode(data));
       await prefs.setString(_keyCachedAt, DateTime.now().toIso8601String());
       await prefs.setInt(_keyDbModifiedTime, dbModifiedTime);
-    } catch (e) {}
+    } catch (e) {
+      // Cache save failed, ignore
+    }
   }
 
   /// 读取基础分析结果
@@ -78,7 +80,9 @@ class AnalyticsCacheService {
       await prefs.setString(_keyAnnualReport, json.encode(data));
       await prefs.setString(_keyCachedAt, DateTime.now().toIso8601String());
       await prefs.setInt(_keyDbModifiedTime, dbModifiedTime);
-    } catch (e) {}
+    } catch (e) {
+      // Cache save failed, ignore
+    }
   }
 
   /// 读取年度报告结果
@@ -102,7 +106,9 @@ class AnalyticsCacheService {
       await prefs.remove(_keyBasicAnalytics);
       await prefs.remove(_keyAnnualReport);
       await prefs.remove(_keyCachedAt);
-    } catch (e) {}
+    } catch (e) {
+      // Cache clear failed, ignore
+    }
   }
 
   /// 清除基础分析缓存
@@ -110,7 +116,9 @@ class AnalyticsCacheService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_keyBasicAnalytics);
-    } catch (e) {}
+    } catch (e) {
+      // Cache clear failed, ignore
+    }
   }
 
   /// 清除年度报告缓存
@@ -118,7 +126,9 @@ class AnalyticsCacheService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_keyAnnualReport);
-    } catch (e) {}
+    } catch (e) {
+      // Cache clear failed, ignore
+    }
   }
 
   /// 检查数据库是否发生变化
@@ -202,8 +212,9 @@ class AnalyticsCacheService {
       'version': _basicAnalyticsVersion,
       'overallStats': overallStats?.toJson(),
       'contactRankings': contactRankings?.map((r) => r.toJson()).toList(),
-      'excludedUsernames':
-          excludedUsernames.map((e) => e.trim().toLowerCase()).toList(),
+      'excludedUsernames': excludedUsernames
+          .map((e) => e.trim().toLowerCase())
+          .toList(),
     };
   }
 

@@ -23,7 +23,9 @@ class DualReportCacheService {
 
       final jsonString = jsonEncode(reportData);
       await prefs.setString(key, jsonString);
-    } catch (e) {}
+    } catch (e) {
+      // Ignore write errors
+    }
   }
 
   /// 从缓存加载双人报告
@@ -66,7 +68,9 @@ class DualReportCacheService {
       final prefs = await SharedPreferences.getInstance();
       final key = _getCacheKey(friendUsername, year);
       await prefs.remove(key);
-    } catch (e) {}
+    } catch (e) {
+      // Ignore remove errors
+    }
   }
 
   /// 清除所有双人报告缓存
@@ -81,7 +85,9 @@ class DualReportCacheService {
       for (final key in keys) {
         await prefs.remove(key);
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignore remove errors
+    }
   }
 
   /// 获取缓存信息

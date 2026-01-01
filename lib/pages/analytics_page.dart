@@ -85,6 +85,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
     if (!widget.databaseService.isConnected) {
       await logger.warning('AnalyticsPage', '数据库未连接，尝试自动连接');
+      if (!mounted) return;
       final appState = context.read<AppState>();
       try {
         await appState.reconnectDatabase();
@@ -372,13 +373,16 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     final displayNames = await widget.databaseService.getDisplayNames(
       privateSessions.map((s) => s.username).toList(),
     );
+    if (!mounted) return [];
     // 预取头像（使用全局缓存）
     try {
       final appState = context.read<AppState>();
       await appState.fetchAndCacheAvatars(
         privateSessions.map((s) => s.username).toList(),
       );
-    } catch (_) {}
+    } catch (_) {
+      // 忽略头像预取失败
+    }
     await logger.debug('AnalyticsPage', '获取到 ${displayNames.length} 个联系人显示名');
 
     int skippedCount = 0;
@@ -491,6 +495,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       usernames.toList(),
     );
 
+    if (!mounted) return;
+
     final myWxid =
         widget.databaseService.currentAccountWxid ??
         await context.read<AppState>().configService.getManualWxid();
@@ -509,6 +515,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
     final selected = Set<String>.from(_excludedUsernames);
     String searchQuery = '';
+
+    if (!mounted) return;
 
     final result = await showDialog<Set<String>>(
       context: context,
@@ -604,6 +612,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     );
 
     if (result == null) return;
+
+    if (!mounted) return;
 
     final appState = context.read<AppState>();
     await appState.configService.saveAnalyticsExcludedUsernames(
@@ -1556,7 +1566,9 @@ class _AnnualReportSubPageState extends State<_AnnualReportSubPage> {
                           children: [
                             RadioListTile<int?>(
                               value: null,
+                              // ignore: deprecated_member_use
                               groupValue: tempSelection,
+                              // ignore: deprecated_member_use
                               onChanged: (value) {
                                 setSheetState(() {
                                   tempSelection = value;
@@ -1569,7 +1581,9 @@ class _AnnualReportSubPageState extends State<_AnnualReportSubPage> {
                               for (final year in _availableYears.reversed)
                                 RadioListTile<int?>(
                                   value: year,
+                                  // ignore: deprecated_member_use
                                   groupValue: tempSelection,
+                                  // ignore: deprecated_member_use
                                   onChanged: (value) {
                                     setSheetState(() {
                                       tempSelection = value;

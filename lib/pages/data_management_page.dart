@@ -468,7 +468,9 @@ class _DataManagementPageState extends State<DataManagementPage> {
           dbFiles.add(entity);
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // 忽略文件列表读取错误
+    }
 
     return dbFiles;
   }
@@ -511,18 +513,18 @@ class _DataManagementPageState extends State<DataManagementPage> {
       // 步骤1：强制清理所有页面状态
       if (mounted) {
         await logger.info('DataManagementPage', '步骤1: 导航到数据管理页面并清理其他页面');
-        context.read<AppState>().setCurrentPage('data_management');
+        if (mounted) context.read<AppState>().setCurrentPage('data_management');
         await Future.delayed(const Duration(milliseconds: 1000));
       }
 
       // 步骤2：多次关闭数据库连接
       if (mounted) {
         await logger.info('DataManagementPage', '步骤2: 第1次关闭数据库连接');
-        await context.read<AppState>().databaseService.close();
+        if (mounted) await context.read<AppState>().databaseService.close();
         await Future.delayed(const Duration(milliseconds: 1000));
 
         await logger.info('DataManagementPage', '步骤2: 第2次关闭数据库连接');
-        await context.read<AppState>().databaseService.close();
+        if (mounted) await context.read<AppState>().databaseService.close();
         await logger.info('DataManagementPage', '所有数据库连接已关闭');
       }
 
@@ -714,10 +716,12 @@ class _DataManagementPageState extends State<DataManagementPage> {
       // 重新连接数据库（增加重试次数和延迟）
       if (mounted) {
         await logger.info('DataManagementPage', '开始重新连接数据库...');
-        await context.read<AppState>().reconnectDatabase(
-          retryCount: 5,
-          retryDelay: 1500,
-        );
+        if (mounted) {
+          await context.read<AppState>().reconnectDatabase(
+            retryCount: 5,
+            retryDelay: 1500,
+          );
+        }
         await logger.info('DataManagementPage', '数据库重新连接完成');
       }
 
@@ -737,10 +741,12 @@ class _DataManagementPageState extends State<DataManagementPage> {
       if (mounted) {
         try {
           await logger.info('DataManagementPage', '开始重新连接数据库...');
-          await context.read<AppState>().reconnectDatabase(
-            retryCount: 5,
-            retryDelay: 1500,
-          );
+          if (mounted) {
+            await context.read<AppState>().reconnectDatabase(
+              retryCount: 5,
+              retryDelay: 1500,
+            );
+          }
           await logger.info('DataManagementPage', '数据库重新连接完成');
         } catch (reconnectError) {
           await logger.error('DataManagementPage', '重新连接数据库失败', reconnectError);
@@ -822,7 +828,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
       // 步骤1：强制清理所有页面状态，确保没有页面在使用数据库
       if (mounted) {
         await logger.info('DataManagementPage', '步骤1: 导航到数据管理页面并清理其他页面');
-        context.read<AppState>().setCurrentPage('data_management');
+        if (mounted) context.read<AppState>().setCurrentPage('data_management');
         // 通知所有页面停止数据库操作
         await Future.delayed(const Duration(milliseconds: 1000));
       }
@@ -830,12 +836,12 @@ class _DataManagementPageState extends State<DataManagementPage> {
       // 步骤2：多次尝试关闭数据库连接，确保所有连接都被释放
       if (mounted) {
         await logger.info('DataManagementPage', '步骤2: 第1次关闭数据库连接（包括缓存）');
-        await context.read<AppState>().databaseService.close();
+        if (mounted) await context.read<AppState>().databaseService.close();
         await Future.delayed(const Duration(milliseconds: 1000));
 
         // 第二次关闭，确保清理
         await logger.info('DataManagementPage', '步骤2: 第2次关闭数据库连接（确保清理）');
-        await context.read<AppState>().databaseService.close();
+        if (mounted) await context.read<AppState>().databaseService.close();
         await logger.info('DataManagementPage', '所有数据库连接已关闭');
       }
 
@@ -1065,10 +1071,12 @@ class _DataManagementPageState extends State<DataManagementPage> {
       // 重新连接数据库（增加重试次数和延迟）
       if (mounted) {
         await logger.info('DataManagementPage', '开始重新连接数据库...');
-        await context.read<AppState>().reconnectDatabase(
-          retryCount: 5,
-          retryDelay: 1500,
-        );
+        if (mounted) {
+          await context.read<AppState>().reconnectDatabase(
+            retryCount: 5,
+            retryDelay: 1500,
+          );
+        }
         await logger.info('DataManagementPage', '数据库重新连接完成');
       }
 
@@ -1093,10 +1101,12 @@ class _DataManagementPageState extends State<DataManagementPage> {
       if (mounted) {
         try {
           await logger.info('DataManagementPage', '开始重新连接数据库...');
-          await context.read<AppState>().reconnectDatabase(
-            retryCount: 5,
-            retryDelay: 1500,
-          );
+          if (mounted) {
+            await context.read<AppState>().reconnectDatabase(
+              retryCount: 5,
+              retryDelay: 1500,
+            );
+          }
           await logger.info('DataManagementPage', '数据库重新连接完成');
         } catch (reconnectError) {
           await logger.error('DataManagementPage', '重新连接数据库失败', reconnectError);
@@ -1213,10 +1223,12 @@ class _DataManagementPageState extends State<DataManagementPage> {
 
         // 重新连接数据库（增加重试次数和延迟）
         await logger.info('DataManagementPage', '开始重新连接数据库...');
-        await context.read<AppState>().reconnectDatabase(
-          retryCount: 5,
-          retryDelay: 1500,
-        );
+        if (mounted) {
+          await context.read<AppState>().reconnectDatabase(
+            retryCount: 5,
+            retryDelay: 1500,
+          );
+        }
         await logger.info('DataManagementPage', '数据库重新连接完成');
 
         _showMessage('解密成功: ${file.fileName}', true);
@@ -1250,10 +1262,12 @@ class _DataManagementPageState extends State<DataManagementPage> {
       if (mounted) {
         try {
           await logger.info('DataManagementPage', '开始重新连接数据库...');
-          await context.read<AppState>().reconnectDatabase(
-            retryCount: 5,
-            retryDelay: 1500,
-          );
+          if (mounted) {
+            await context.read<AppState>().reconnectDatabase(
+              retryCount: 5,
+              retryDelay: 1500,
+            );
+          }
           await logger.info('DataManagementPage', '数据库重新连接完成');
         } catch (reconnectError) {
           await logger.error('DataManagementPage', '重新连接数据库失败', reconnectError);
@@ -2064,19 +2078,23 @@ class _DataManagementPageState extends State<DataManagementPage> {
                         settings: settings,
                         transitionDuration: const Duration(milliseconds: 220),
                         reverseTransitionDuration: Duration.zero,
-                        pageBuilder: (_, __, ___) => _buildImageSection(),
-                        transitionsBuilder: (_, animation, __, child) {
-                          return FadeTransition(
-                            opacity: CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeInOut,
-                            ),
-                            child: ColoredBox(
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                              child: ClipRect(child: child),
-                            ),
-                          );
-                        },
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            _buildImageSection(),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                              return FadeTransition(
+                                opacity: CurvedAnimation(
+                                  parent: animation,
+                                  curve: Curves.easeInOut,
+                                ),
+                                child: ColoredBox(
+                                  color: Theme.of(
+                                    context,
+                                  ).scaffoldBackgroundColor,
+                                  child: ClipRect(child: child),
+                                ),
+                              );
+                            },
                       );
                     case '/database':
                     default:
@@ -2084,19 +2102,23 @@ class _DataManagementPageState extends State<DataManagementPage> {
                         settings: settings,
                         transitionDuration: const Duration(milliseconds: 220),
                         reverseTransitionDuration: Duration.zero,
-                        pageBuilder: (_, __, ___) => _buildDatabaseSection(),
-                        transitionsBuilder: (_, animation, __, child) {
-                          return FadeTransition(
-                            opacity: CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeInOut,
-                            ),
-                            child: ColoredBox(
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                              child: ClipRect(child: child),
-                            ),
-                          );
-                        },
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            _buildDatabaseSection(),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                              return FadeTransition(
+                                opacity: CurvedAnimation(
+                                  parent: animation,
+                                  curve: Curves.easeInOut,
+                                ),
+                                child: ColoredBox(
+                                  color: Theme.of(
+                                    context,
+                                  ).scaffoldBackgroundColor,
+                                  child: ClipRect(child: child),
+                                ),
+                              );
+                            },
                       );
                   }
                 },
@@ -2226,7 +2248,8 @@ class _DataManagementPageState extends State<DataManagementPage> {
                       child: ListView.separated(
                         padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
                         itemCount: _databaseFiles.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final file = _databaseFiles[index];
                           return _buildFileCard(file);

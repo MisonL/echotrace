@@ -7,14 +7,82 @@ import '../models/message.dart';
 import 'database_service.dart';
 
 const Set<String> _chineseStopwords = {
-  '的', '了', '我', '你', '他', '她', '它', '们', '是', '在', '也', '有', '就',
-  '不', '都', '而', '及', '与', '且', '或', '个', '这', '那', '一',
-  '啊', '哦', '嗯', '呢', '吧', '呀', '嘛', '哈', '嘿', '哼', '哎', '唉',
-  '一个', '一些', '什么', '那个', '这个', '怎么', '我们', '你们', '他们',
-  '然后', '但是', '所以', '因为', '知道', '觉得', '就是', '没有', '现在',
-  '不是', '可以', '这么', '那么', '还有', '如果', '的话', '可能', '出来',
-  '还是', '一样', '这样', '那样', '自己', '之后', '之前', '时候',
-  '东西', '什么样', '卧槽', '我靠', '淦',
+  '的',
+  '了',
+  '我',
+  '你',
+  '他',
+  '她',
+  '它',
+  '们',
+  '是',
+  '在',
+  '也',
+  '有',
+  '就',
+  '不',
+  '都',
+  '而',
+  '及',
+  '与',
+  '且',
+  '或',
+  '个',
+  '这',
+  '那',
+  '一',
+  '啊',
+  '哦',
+  '嗯',
+  '呢',
+  '吧',
+  '呀',
+  '嘛',
+  '哈',
+  '嘿',
+  '哼',
+  '哎',
+  '唉',
+  '一个',
+  '一些',
+  '什么',
+  '那个',
+  '这个',
+  '怎么',
+  '我们',
+  '你们',
+  '他们',
+  '然后',
+  '但是',
+  '所以',
+  '因为',
+  '知道',
+  '觉得',
+  '就是',
+  '没有',
+  '现在',
+  '不是',
+  '可以',
+  '这么',
+  '那么',
+  '还有',
+  '如果',
+  '的话',
+  '可能',
+  '出来',
+  '还是',
+  '一样',
+  '这样',
+  '那样',
+  '自己',
+  '之后',
+  '之前',
+  '时候',
+  '东西',
+  '什么样',
+  '卧槽',
+  '我靠',
+  '淦',
 };
 
 class GroupChatInfo {
@@ -35,8 +103,16 @@ class GroupMember {
   final String username;
   final String displayName;
   final String? avatarUrl;
-  GroupMember({required this.username, required this.displayName, this.avatarUrl});
-  Map<String, dynamic> toJson() => {'username': username, 'displayName': displayName, 'avatarUrl': avatarUrl};
+  GroupMember({
+    required this.username,
+    required this.displayName,
+    this.avatarUrl,
+  });
+  Map<String, dynamic> toJson() => {
+    'username': username,
+    'displayName': displayName,
+    'avatarUrl': avatarUrl,
+  };
 }
 
 class GroupMessageRank {
@@ -53,7 +129,7 @@ class DailyMessageCount {
 
 class GroupChatService {
   final DatabaseService _databaseService;
-  
+
   GroupChatService(this._databaseService);
 
   Future<Map<int, int>> getGroupMediaTypeStats({
@@ -62,7 +138,7 @@ class GroupChatService {
     required DateTime endDate,
   }) async {
     // --- 服务层日志 ---
-    
+
     return await _databaseService.getGroupMediaTypeStats(
       chatroomId: chatroomId,
       startDate: startDate,
@@ -89,7 +165,7 @@ class GroupChatService {
     final words = <String>[];
     // 正则表达式只匹配连续的汉字块
     final chinesePattern = RegExp(r'[\u4e00-\u9fa5]+');
-    
+
     final matches = chinesePattern.allMatches(text);
     for (final match in matches) {
       final segment = match.group(0)!;
@@ -104,17 +180,19 @@ class GroupChatService {
     }
     return words;
   }
-  
+
   // --- 提取其他令牌（英文、数字、Emoji）的方法 ---
   List<String> _tokenizeOthers(String text) {
     final regex = RegExp(
       r'([\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+)|([a-zA-Z0-9]+)',
       unicode: true,
     );
-    
-    return regex.allMatches(text).map((m) => m.group(0)!.toLowerCase()).toList();
-  }
 
+    return regex
+        .allMatches(text)
+        .map((m) => m.group(0)!.toLowerCase())
+        .toList();
+  }
 
   Future<Map<String, int>> getMemberWordFrequency({
     required String chatroomId,
@@ -123,37 +201,45 @@ class GroupChatService {
     required DateTime endDate,
     int topN = 100,
   }) async {
-    final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
-    
+    final endOfDay = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+      23,
+      59,
+      59,
+    );
+
     try {
       final messages = await _databaseService.getMessagesByDate(
         chatroomId,
         startDate.millisecondsSinceEpoch ~/ 1000,
         endOfDay.millisecondsSinceEpoch ~/ 1000,
       );
-      
+
       final textContent = messages
-        .where((m) => 
-            m.senderUsername == memberUsername &&
-            (m.isTextMessage || m.localType == 244813135921) &&
-            m.displayContent.isNotEmpty &&
-            !m.displayContent.startsWith('[') &&
-            !m.displayContent.startsWith('<?xml') &&
-            !m.displayContent.contains('<msg>')
-        )
-        .map((m) => m.displayContent)
-        .join(' ');
-  
+          .where(
+            (m) =>
+                m.senderUsername == memberUsername &&
+                (m.isTextMessage || m.localType == 244813135921) &&
+                m.displayContent.isNotEmpty &&
+                !m.displayContent.startsWith('[') &&
+                !m.displayContent.startsWith('<?xml') &&
+                !m.displayContent.contains('<msg>'),
+          )
+          .map((m) => m.displayContent)
+          .join(' ');
+
       if (textContent.isEmpty) {
         return {};
       }
-  
+
       // --- 使用新的分词组合策略 ---
       final List<String> chineseWords = _tokenizeChineseForWords(textContent);
       final List<String> otherTokens = _tokenizeOthers(textContent);
-      
+
       final allTokens = [...chineseWords, ...otherTokens];
-      
+
       final wordCounts = <String, int>{};
       for (final token in allTokens) {
         // 过滤条件：长度至少为2，且不是停用词
@@ -161,15 +247,15 @@ class GroupChatService {
           wordCounts[token] = (wordCounts[token] ?? 0) + 1;
         }
       }
-  
+
       if (wordCounts.isEmpty) {
         return {};
       }
-  
+
       final sortedEntries = wordCounts.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
       final topEntries = sortedEntries.take(topN);
-  
+
       return Map.fromEntries(topEntries);
     } catch (e) {
       return {};
@@ -209,7 +295,10 @@ class GroupChatService {
     try {
       final contactDbPath = await _databaseService.getContactDatabasePath();
       if (contactDbPath == null) return 0;
-      final db = await databaseFactoryFfi.openDatabase(contactDbPath, options: OpenDatabaseOptions(readOnly: true));
+      final db = await databaseFactoryFfi.openDatabase(
+        contactDbPath,
+        options: OpenDatabaseOptions(readOnly: true),
+      );
       try {
         final result = await db.rawQuery(
           '''
@@ -233,9 +322,11 @@ class GroupChatService {
       final contactDbPath = await _databaseService.getContactDatabasePath();
       if (contactDbPath == null) return [];
 
-      final db = await databaseFactoryFfi.openDatabase(contactDbPath,
-          options: OpenDatabaseOptions(readOnly: true));
-      
+      final db = await databaseFactoryFfi.openDatabase(
+        contactDbPath,
+        options: OpenDatabaseOptions(readOnly: true),
+      );
+
       try {
         final memberRows = await db.rawQuery(
           '''
@@ -248,31 +339,34 @@ class GroupChatService {
         );
 
         if (memberRows.isEmpty) return [];
-        
+
         final usernames = memberRows
-          .where((row) => row['username'] != null)
-          .map((row) => row['username'] as String)
-          .toList();
-        
+            .where((row) => row['username'] != null)
+            .map((row) => row['username'] as String)
+            .toList();
+
         final displayNames = await _databaseService.getDisplayNames(usernames);
 
         final avatarMap = {
-          for (var row in memberRows) 
-            if (row['username'] != null) 
-              row['username'] as String: row['small_head_url'] as String?
+          for (var row in memberRows)
+            if (row['username'] != null)
+              row['username'] as String: row['small_head_url'] as String?,
         };
 
         for (final username in usernames) {
-           members.add(GroupMember(
-             username: username, 
-             displayName: displayNames[username] ?? username,
-             avatarUrl: avatarMap[username],
-           ));
+          members.add(
+            GroupMember(
+              username: username,
+              displayName: displayNames[username] ?? username,
+              avatarUrl: avatarMap[username],
+            ),
+          );
         }
       } finally {
         await db.close();
       }
     } catch (e) {
+      // Failed to get members, return empty list
     }
     return members;
   }
@@ -282,13 +376,24 @@ class GroupChatService {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+    final endOfDay = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+      23,
+      59,
+      59,
+    );
     final messages = await _databaseService.getMessagesByDate(
-        chatroomId, startDate.millisecondsSinceEpoch ~/ 1000, endOfDay.millisecondsSinceEpoch ~/ 1000);
+      chatroomId,
+      startDate.millisecondsSinceEpoch ~/ 1000,
+      endOfDay.millisecondsSinceEpoch ~/ 1000,
+    );
     final Map<String, int> messageCounts = {};
     final Set<String> senderUsernames = {};
     for (final Message message in messages) {
-      if (message.senderUsername != null && message.senderUsername!.isNotEmpty) {
+      if (message.senderUsername != null &&
+          message.senderUsername!.isNotEmpty) {
         final username = message.senderUsername!;
         messageCounts[username] = (messageCounts[username] ?? 0) + 1;
         senderUsernames.add(username);
@@ -301,33 +406,52 @@ class GroupChatService {
 
     final List<GroupMessageRank> ranking = [];
     messageCounts.forEach((username, count) {
-      final member = memberMap[username] ?? GroupMember(username: username, displayName: username);
+      final member =
+          memberMap[username] ??
+          GroupMember(username: username, displayName: username);
       ranking.add(GroupMessageRank(member: member, messageCount: count));
     });
     ranking.sort((a, b) => b.messageCount.compareTo(a.messageCount));
     return ranking;
   }
-  
+
   Future<List<DailyMessageCount>> getMemberDailyMessageCount({
     required String chatroomId,
     required String memberUsername,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+    final endOfDay = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+      23,
+      59,
+      59,
+    );
     final messages = await _databaseService.getMessagesByDate(
-      chatroomId, startDate.millisecondsSinceEpoch ~/ 1000, endOfDay.millisecondsSinceEpoch ~/ 1000);
-    final memberMessages = messages.where((m) => m.senderUsername == memberUsername);
+      chatroomId,
+      startDate.millisecondsSinceEpoch ~/ 1000,
+      endOfDay.millisecondsSinceEpoch ~/ 1000,
+    );
+    final memberMessages = messages.where(
+      (m) => m.senderUsername == memberUsername,
+    );
     final Map<String, int> dailyCounts = {};
     final dateFormat = DateFormat('yyyy-MM-dd');
     for (final message in memberMessages) {
-       final dateStr = dateFormat.format(DateTime.fromMillisecondsSinceEpoch(message.createTime * 1000));
-       dailyCounts[dateStr] = (dailyCounts[dateStr] ?? 0) + 1;
+      final dateStr = dateFormat.format(
+        DateTime.fromMillisecondsSinceEpoch(message.createTime * 1000),
+      );
+      dailyCounts[dateStr] = (dailyCounts[dateStr] ?? 0) + 1;
     }
     final result = dailyCounts.entries.map((entry) {
-        return DailyMessageCount(date: DateTime.parse(entry.key), count: entry.value);
+      return DailyMessageCount(
+        date: DateTime.parse(entry.key),
+        count: entry.value,
+      );
     }).toList();
-    result.sort((a,b) => a.date.compareTo(b.date));
+    result.sort((a, b) => a.date.compareTo(b.date));
     return result;
   }
 }

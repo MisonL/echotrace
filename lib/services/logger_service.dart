@@ -102,7 +102,9 @@ class LoggerService {
       await _logFile!.copy(archivePath);
       await _logFile!.delete();
       await _logFile!.create();
-    } catch (e) {}
+    } catch (e) {
+      // Ignore archive errors
+    }
   }
 
   /// 写入日志
@@ -280,7 +282,9 @@ class LoggerService {
         await _logFile!.create();
         await _writeLog(LogLevel.info, 'LoggerService', '日志已清空');
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignore clear errors
+    }
   }
 
   /// 导出日志到指定路径

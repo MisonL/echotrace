@@ -11,10 +11,7 @@ import 'dual_report_browser_page.dart';
 class FriendSelectionPage extends StatefulWidget {
   final DatabaseService databaseService;
 
-  const FriendSelectionPage({
-    super.key,
-    required this.databaseService,
-  });
+  const FriendSelectionPage({super.key, required this.databaseService});
 
   @override
   State<FriendSelectionPage> createState() => _FriendSelectionPageState();
@@ -32,8 +29,8 @@ class _FriendSelectionPageState extends State<FriendSelectionPage> {
     _analyticsService = AdvancedAnalyticsService(widget.databaseService);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final appState = context.read<AppState>();
-      final excluded =
-          await appState.configService.getAnalyticsExcludedUsernames();
+      final excluded = await appState.configService
+          .getAnalyticsExcludedUsernames();
       final normalized = excluded.map((e) => e.toLowerCase()).toSet();
       normalized.add('filehelper');
       final myWxid =
@@ -100,11 +97,7 @@ class _FriendSelectionPageState extends State<FriendSelectionPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
               _errorMessage!,
@@ -112,10 +105,7 @@ class _FriendSelectionPageState extends State<FriendSelectionPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadFriendList,
-              child: const Text('重试'),
-            ),
+            ElevatedButton(onPressed: _loadFriendList, child: const Text('重试')),
           ],
         ),
       );
@@ -126,16 +116,9 @@ class _FriendSelectionPageState extends State<FriendSelectionPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.person_outline,
-              size: 64,
-              color: Colors.grey,
-            ),
+            Icon(Icons.person_outline, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text(
-              '暂无聊天记录',
-              style: TextStyle(color: Colors.grey),
-            ),
+            Text('暂无聊天记录', style: TextStyle(color: Colors.grey)),
           ],
         ),
       );
@@ -147,7 +130,9 @@ class _FriendSelectionPageState extends State<FriendSelectionPage> {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
-          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+          color: Theme.of(
+            context,
+          ).colorScheme.primaryContainer.withValues(alpha: 0.3),
           child: Row(
             children: [
               Icon(
@@ -234,8 +219,10 @@ class _FriendSelectionPageState extends State<FriendSelectionPage> {
                     ? CachedNetworkImage(
                         imageUrl: avatarUrl,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => _buildAvatarPlaceholder(friend),
-                        errorWidget: (context, url, error) => _buildAvatarPlaceholder(friend),
+                        placeholder: (context, url) =>
+                            _buildAvatarPlaceholder(friend),
+                        errorWidget: (context, url, error) =>
+                            _buildAvatarPlaceholder(friend),
                       )
                     : _buildAvatarPlaceholder(friend),
               ),
@@ -247,9 +234,9 @@ class _FriendSelectionPageState extends State<FriendSelectionPage> {
             Expanded(
               child: Text(
                 friend.displayName,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w500),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -259,18 +246,15 @@ class _FriendSelectionPageState extends State<FriendSelectionPage> {
             Text(
               friend.count.toLocaleString(),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
             ),
 
             const SizedBox(width: 8),
 
             // 箭头图标
-            Icon(
-              Icons.chevron_right,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.chevron_right, color: Colors.grey[400]),
           ],
         ),
       ),

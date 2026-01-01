@@ -55,6 +55,7 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
 
     if (!widget.databaseService.isConnected) {
       await logger.warning('ChatTimelinePage', '数据库未连接，尝试自动连接');
+      if (!mounted) return;
       final appState = context.read<AppState>();
       try {
         await appState.reconnectDatabase();
@@ -526,7 +527,7 @@ class _ChatTimelinePageState extends State<ChatTimelinePage> {
 
     return ListView.separated(
       itemCount: filtered.length,
-      separatorBuilder: (_, __) => Divider(
+      separatorBuilder: (context, index) => Divider(
         height: 1,
         color: Theme.of(context).dividerTheme.color?.withValues(alpha: 0.2),
       ),

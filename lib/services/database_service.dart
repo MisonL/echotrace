@@ -152,10 +152,9 @@ class DatabaseService {
       _messageDbCacheTime = null;
       _cachedMessageYears = null;
       _messageYearsCacheTime = null;
-      _currentAccountWxid =
-          (_manualWxid != null && _manualWxid!.isNotEmpty)
-              ? _manualWxid
-              : _extractWxidFromPath(normalizedPath);
+      _currentAccountWxid = (_manualWxid != null && _manualWxid!.isNotEmpty)
+          ? _manualWxid
+          : _extractWxidFromPath(normalizedPath);
       _wcdbHandle = null;
       _stopRealtimeWatcher();
 
@@ -236,10 +235,9 @@ class DatabaseService {
       _messageDbCacheTime = null;
       _cachedMessageYears = null;
       _messageYearsCacheTime = null;
-      _currentAccountWxid =
-          (_manualWxid != null && _manualWxid!.isNotEmpty)
-              ? _manualWxid
-              : _extractWxidFromPath(normalizedPath);
+      _currentAccountWxid = (_manualWxid != null && _manualWxid!.isNotEmpty)
+          ? _manualWxid
+          : _extractWxidFromPath(normalizedPath);
       _startRealtimeWatcher();
 
       await logger.info(
@@ -424,12 +422,15 @@ class DatabaseService {
         }
       }
 
-      await logger.info('DatabaseService', '从表 $sessionTableName 查询会话${limit != null ? '（限制 $limit 条）' : '（无限制）'}');
+      await logger.info(
+        'DatabaseService',
+        '从表 $sessionTableName 查询会话${limit != null ? '（限制 $limit 条）' : '（无限制）'}',
+      );
 
       final List<Map<String, dynamic>> maps = await db.query(
         sessionTableName,
         orderBy: 'sort_timestamp DESC',
-        limit: limit,  // null 表示不限制
+        limit: limit, // null 表示不限制
       );
 
       await logger.info('DatabaseService', '查询到 ${maps.length} 条原始会话记录');
@@ -988,8 +989,9 @@ class DatabaseService {
       String? typeColumn;
       bool hasPackedInfoData = false;
       try {
-        final pragmaRows =
-            await info.database.rawQuery("PRAGMA table_info('${info.tableName}')");
+        final pragmaRows = await info.database.rawQuery(
+          "PRAGMA table_info('${info.tableName}')",
+        );
         final cols = pragmaRows
             .map((row) => (row['name'] as String?)?.toLowerCase() ?? '')
             .toSet();
@@ -1301,10 +1303,10 @@ class DatabaseService {
     final direction = ascending ? 'ASC' : 'DESC';
     if (schema.hasSortSeq) {
       if (schema.hasCreateTime) {
-      return 'm.sort_seq $direction, '
-          'm.create_time $direction, m.local_id $direction';
-    }
-    return 'm.sort_seq $direction, m.local_id $direction';
+        return 'm.sort_seq $direction, '
+            'm.create_time $direction, m.local_id $direction';
+      }
+      return 'm.sort_seq $direction, m.local_id $direction';
     }
     if (schema.hasCreateTime) {
       return 'm.create_time $direction, m.local_id $direction';
@@ -1374,8 +1376,9 @@ class DatabaseService {
     final maps = await db.rawQuery(buffer.toString(), args);
     if (maps.isEmpty) return const [];
 
-    final messages =
-        maps.map((m) => Message.fromMapLite(m, myWxid: _currentAccountWxid)).toList();
+    final messages = maps
+        .map((m) => Message.fromMapLite(m, myWxid: _currentAccountWxid))
+        .toList();
     if (typeColumn == null && localTypes.isNotEmpty) {
       return messages.where((m) => localTypes.contains(m.localType)).toList();
     }
@@ -2012,7 +2015,9 @@ class DatabaseService {
               resultMap[date] = {'count': count, 'firstIsSend': firstIsSend};
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignore
+        }
       }
 
       return resultMap;
@@ -2047,16 +2052,14 @@ class DatabaseService {
 
       for (final dbInfo in dbInfos) {
         try {
-          final result = await dbInfo.database.rawQuery(
-            '''
+          final result = await dbInfo.database.rawQuery('''
             SELECT 
               strftime('%m', create_time, 'unixepoch', 'localtime') as month,
               COUNT(*) as count
             FROM ${dbInfo.tableName}
             WHERE 1=1 ${yearFilter ?? ''}
             GROUP BY month
-          ''',
-          );
+          ''');
 
           for (final row in result) {
             final monthStr = row['month'] as String?;
@@ -2065,7 +2068,9 @@ class DatabaseService {
             final count = (row['count'] as int?) ?? 0;
             resultMap[month] = (resultMap[month] ?? 0) + count;
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignore
+        }
       }
 
       return resultMap;
@@ -2112,7 +2117,9 @@ class DatabaseService {
           for (final row in result) {
             allDates.add(row['date'] as String);
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignore
+        }
       }
 
       // 排序并转换为DateTime
@@ -2188,9 +2195,13 @@ class DatabaseService {
                   'db_index': dbIdx,
                 });
               }
-            } catch (e) {}
+            } catch (e) {
+              // Ignore
+            }
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignore
+        }
       }
 
       // 按长度排序，返回前100条
@@ -2229,8 +2240,10 @@ class DatabaseService {
 
       // 使用缓存的数据库连接
       final cachedDbs = await _getCachedMessageDatabases();
-      final excludedTables =
-          await _getExcludedTableNames(excludedUsernames, cachedDbs);
+      final excludedTables = await _getExcludedTableNames(
+        excludedUsernames,
+        cachedDbs,
+      );
 
       // 从所有数据库查询并累加
       for (final dbInfo in cachedDbs) {
@@ -2257,9 +2270,13 @@ class DatabaseService {
                 final count = row['count'] as int;
                 typeCount[type] = (typeCount[type] ?? 0) + count;
               }
-            } catch (e) {}
+            } catch (e) {
+              // Ignore
+            }
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignore
+        }
       }
 
       return typeCount;
@@ -2315,7 +2332,9 @@ class DatabaseService {
           totalCount += (row['total'] as int?) ?? 0;
           sentCount += (row['sent'] as int?) ?? 0;
           receivedCount += (row['received'] as int?) ?? 0;
-        } catch (e) {}
+        } catch (e) {
+          // Ignore
+        }
       }
 
       return {
@@ -2417,7 +2436,8 @@ class DatabaseService {
           );
           final columns = {
             for (final row in pragmaRows)
-              ((row['name'] as String?) ?? '').toLowerCase(): (row['name'] as String?) ?? '',
+              ((row['name'] as String?) ?? '').toLowerCase():
+                  (row['name'] as String?) ?? '',
           };
 
           String? resolveColumn(List<String> candidates) {
@@ -2457,9 +2477,7 @@ class DatabaseService {
             buffer.writeln('  0 as emoji,');
           }
           if (typeColumn != null && contentColumn != null) {
-            buffer.writeln(
-              '  COALESCE(SUM(CASE WHEN $typeColumn = 1 THEN',
-            );
+            buffer.writeln('  COALESCE(SUM(CASE WHEN $typeColumn = 1 THEN');
             buffer.writeln(
               '    LENGTH(REPLACE(REPLACE(REPLACE($contentColumn, \' \', \'\'), \'\\n\', \'\'), \'\\t\', \'\'))',
             );
@@ -2470,10 +2488,10 @@ class DatabaseService {
           buffer.writeln('FROM ${dbInfo.tableName}');
           buffer.writeln('WHERE $timeColumn >= ? AND $timeColumn <= ?');
 
-          final result = await dbInfo.database.rawQuery(
-            buffer.toString(),
-            [startTimestamp, endTimestamp],
-          );
+          final result = await dbInfo.database.rawQuery(buffer.toString(), [
+            startTimestamp,
+            endTimestamp,
+          ]);
 
           final row = result.first;
           totalMessages += (row['total'] as int?) ?? 0;
@@ -2503,7 +2521,6 @@ class DatabaseService {
       };
     }
   }
-
 
   /// 获取会话年度最常用表情包（按MD5）
   Future<Map<String, dynamic>> getSessionYearlyTopEmojiMd5(
@@ -2601,10 +2618,11 @@ class DatabaseService {
               'WHERE m.$timeColumn >= ? AND m.$timeColumn <= ? AND m.$typeColumn = 47',
             );
 
-          final rows = await dbInfo.database.rawQuery(
-            sql.toString(),
-            [_currentAccountWxid ?? '', startTimestamp, endTimestamp],
-          );
+          final rows = await dbInfo.database.rawQuery(sql.toString(), [
+            _currentAccountWxid ?? '',
+            startTimestamp,
+            endTimestamp,
+          ]);
           await logger.debug(
             'DatabaseService',
             'top emoji scan ${dbInfo.tableName}: ${rows.length} rows',
@@ -2690,8 +2708,9 @@ class DatabaseService {
         'myTopEmojiMd5': myTopKey,
         'friendTopEmojiMd5': friendTopKey,
         'myTopEmojiUrl': myTopKey == null ? null : myUrlMap[myTopKey],
-        'friendTopEmojiUrl':
-            friendTopKey == null ? null : friendUrlMap[friendTopKey],
+        'friendTopEmojiUrl': friendTopKey == null
+            ? null
+            : friendUrlMap[friendTopKey],
         'myEmojiRankings': myRankings,
         'friendEmojiRankings': friendRankings,
       };
@@ -3380,13 +3399,17 @@ class DatabaseService {
 
     // 非 wxid 开头的自定义账号：若末尾是 "_xxxx"(下划线 + 4 位字母/数字) 则去掉该后缀
     if (!trimmed.toLowerCase().startsWith('wxid_')) {
-      final suffixMatch = RegExp(r'^(.+)_([a-zA-Z0-9]{4})$').firstMatch(trimmed);
+      final suffixMatch = RegExp(
+        r'^(.+)_([a-zA-Z0-9]{4})$',
+      ).firstMatch(trimmed);
       if (suffixMatch != null) return suffixMatch.group(1);
       return trimmed;
     }
 
-    final match =
-        RegExp(r'^(wxid_[^_]+)', caseSensitive: false).firstMatch(trimmed);
+    final match = RegExp(
+      r'^(wxid_[^_]+)',
+      caseSensitive: false,
+    ).firstMatch(trimmed);
     if (match != null) return match.group(1)!.toLowerCase();
     return trimmed.toLowerCase();
   }
@@ -3507,7 +3530,9 @@ class DatabaseService {
 
         try {
           await queryTableWithAlias('contact', lookupPool);
-        } catch (e) {}
+        } catch (e) {
+          // Ignore
+        }
 
         // 2. 对于没找到的，从 stranger 表查询
         var notFoundUsernames = usernames
@@ -3517,7 +3542,9 @@ class DatabaseService {
           try {
             final strangerLookup = _canonicalizeUsernames(notFoundUsernames);
             await queryTableWithAlias('stranger', strangerLookup);
-          } catch (e) {}
+          } catch (e) {
+            // Ignore
+          }
         }
 
         // 3. 对于仍然没找到的群聊，尝试模糊匹配
@@ -3588,7 +3615,9 @@ class DatabaseService {
                 // 忽略单个查询错误
               }
             }
-          } catch (e) {}
+          } catch (e) {
+            // Ignore
+          }
         }
 
         if (kDebugMode && result.length < usernames.length) {
@@ -4478,14 +4507,15 @@ class DatabaseService {
     if (trimmed.isEmpty) return trimmed;
 
     if (trimmed.toLowerCase().startsWith('wxid_')) {
-      final match = RegExp(r'^(wxid_[^_]+)', caseSensitive: false)
-          .firstMatch(trimmed);
+      final match = RegExp(
+        r'^(wxid_[^_]+)',
+        caseSensitive: false,
+      ).firstMatch(trimmed);
       if (match != null) return match.group(1)!;
       return trimmed;
     }
 
-    final suffixMatch =
-        RegExp(r'^(.+)_([a-zA-Z0-9]{4})$').firstMatch(trimmed);
+    final suffixMatch = RegExp(r'^(.+)_([a-zA-Z0-9]{4})$').firstMatch(trimmed);
     if (suffixMatch != null) return suffixMatch.group(1)!;
 
     return trimmed;
@@ -4630,8 +4660,9 @@ class DatabaseService {
     }
 
     if (_currentAccountWxid != null && _currentAccountWxid!.isNotEmpty) {
-      final accountPath =
-          await _findContactDatabaseForAccount(_currentAccountWxid!);
+      final accountPath = await _findContactDatabaseForAccount(
+        _currentAccountWxid!,
+      );
       if (accountPath != null) {
         final normalized = PathUtils.normalizeDatabasePath(accountPath);
         await logger.info(
@@ -4642,10 +4673,7 @@ class DatabaseService {
       }
 
       if (_manualWxid != null && _manualWxid!.isNotEmpty) {
-        await logger.warning(
-          'DatabaseService',
-          '已设置手动wxid，但未找到对应 contact 数据库',
-        );
+        await logger.warning('DatabaseService', '已设置手动wxid，但未找到对应 contact 数据库');
         return null;
       }
     }
@@ -4747,10 +4775,7 @@ class DatabaseService {
     required int createTime,
   }) async {
     if (_mode == DatabaseMode.realtime) {
-      await logger.warning(
-        'DatabaseService',
-        '当前是实时模式，暂不支持读取 media_* 语音数据',
-      );
+      await logger.warning('DatabaseService', '当前是实时模式，暂不支持读取 media_* 语音数据');
       return null;
     }
 
@@ -4846,7 +4871,8 @@ class DatabaseService {
         i + batchSize > md5List.length ? md5List.length : i + batchSize,
       );
       final placeholders = List.filled(chunk.length, '?').join(',');
-      final sql = '''
+      final sql =
+          '''
         SELECT md5, extern_md5, cdn_url, tp_url, thumb_url, extern_url, encrypt_url
         FROM kNonStoreEmoticonTable
         WHERE md5 IN ($placeholders) OR extern_md5 IN ($placeholders)
@@ -5333,8 +5359,10 @@ class DatabaseService {
 
     try {
       final cachedDbs = await _getCachedMessageDatabases();
-      final excludedTables =
-          await _getExcludedTableNames(excludedUsernames, cachedDbs);
+      final excludedTables = await _getExcludedTableNames(
+        excludedUsernames,
+        cachedDbs,
+      );
 
       for (final cachedDb in cachedDbs) {
         try {
@@ -5841,8 +5869,10 @@ class DatabaseService {
 
     try {
       final cachedDbs = await _getCachedMessageDatabases();
-      final excludedTables =
-          await _getExcludedTableNames(excludedUsernames, cachedDbs);
+      final excludedTables = await _getExcludedTableNames(
+        excludedUsernames,
+        cachedDbs,
+      );
 
       int totalLength = 0;
       int textMessageCount = 0;
@@ -6237,7 +6267,9 @@ class DatabaseService {
       }
 
       // --- 打印最终结果 ---
-    } catch (e) {}
+    } catch (e) {
+      // Ignore
+    }
 
     return hourlyCounts;
   }
@@ -6317,9 +6349,13 @@ class DatabaseService {
               typeCounts[type] = (typeCounts[type] ?? 0) + count;
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignore
+        }
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignore
+    }
 
     return typeCounts;
   }
@@ -6393,10 +6429,7 @@ class _MergeEntry {
   final Message message;
   final _BatchMessageCursor cursor;
 
-  const _MergeEntry({
-    required this.message,
-    required this.cursor,
-  });
+  const _MergeEntry({required this.message, required this.cursor});
 }
 
 class _MergeEntryHeap {
@@ -6445,8 +6478,7 @@ class _MergeEntryHeap {
       if (left >= length) return;
       var best = left;
       final right = left + 1;
-      if (right < length &&
-          _compare(_items[right], _items[left]) < 0) {
+      if (right < length && _compare(_items[right], _items[left]) < 0) {
         best = right;
       }
       if (_compare(_items[best], _items[parent]) >= 0) {
@@ -6474,10 +6506,12 @@ int _compareMergeEntryDesc(_MergeEntry a, _MergeEntry b) {
   if (aPrimary != bPrimary) {
     return bPrimary.compareTo(aPrimary);
   }
-  final aCreate =
-      aSchema.hasCreateTime ? a.message.createTime : a.message.localId;
-  final bCreate =
-      bSchema.hasCreateTime ? b.message.createTime : b.message.localId;
+  final aCreate = aSchema.hasCreateTime
+      ? a.message.createTime
+      : a.message.localId;
+  final bCreate = bSchema.hasCreateTime
+      ? b.message.createTime
+      : b.message.localId;
   if (aCreate != bCreate) {
     return bCreate.compareTo(aCreate);
   }
@@ -6496,10 +6530,12 @@ int _compareMergeEntryAsc(_MergeEntry a, _MergeEntry b) {
   if (aPrimary != bPrimary) {
     return aPrimary.compareTo(bPrimary);
   }
-  final aCreate =
-      aSchema.hasCreateTime ? a.message.createTime : a.message.localId;
-  final bCreate =
-      bSchema.hasCreateTime ? b.message.createTime : b.message.localId;
+  final aCreate = aSchema.hasCreateTime
+      ? a.message.createTime
+      : a.message.localId;
+  final bCreate = bSchema.hasCreateTime
+      ? b.message.createTime
+      : b.message.localId;
   if (aCreate != bCreate) {
     return aCreate.compareTo(bCreate);
   }

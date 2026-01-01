@@ -28,7 +28,7 @@ class XmlMessageParser {
   static Map<String, dynamic>? parsePatMessageInfo(String xmlContent) {
     try {
       final document = XmlDocument.parse(xmlContent);
-      final template = document.findAllElements('template').first.text;
+      final template = document.findAllElements('template').first.innerText;
 
       // 提取模板中的所有账号占位符（不限命名格式）
       final placeholderRegex = RegExp(r'\$\{([^}]+)\}');
@@ -63,9 +63,9 @@ class XmlMessageParser {
       final appmsg = document.findAllElements('appmsg').first;
       final refermsg = appmsg.findAllElements('refermsg').first;
 
-      final displayname = refermsg.findElements('displayname').first.text;
-      final content = refermsg.findElements('content').first.text;
-      final type = refermsg.findElements('type').first.text;
+      final displayname = refermsg.findElements('displayname').first.innerText;
+      final content = refermsg.findElements('content').first.innerText;
+      final type = refermsg.findElements('type').first.innerText;
 
       String displayContent = content;
 

@@ -2050,13 +2050,13 @@ class _ExportProgressDialogState extends State<_ExportProgressDialog> {
         const SizedBox(height: 24),
         ValueListenableBuilder<int>(
           valueListenable: _exportedCountNotifier,
-          builder: (context, count, _) {
+          builder: (context, count, child1) {
             return ValueListenableBuilder<int>(
               valueListenable: _exportedMediaNotifier,
-              builder: (context, mediaCount, __) {
+              builder: (context, mediaCount, child2) {
                 return ValueListenableBuilder<String>(
                   valueListenable: _mediaStageNotifier,
-                  builder: (context, stage, ___) {
+                  builder: (context, stage, child3) {
                     final showMedia = stage.isNotEmpty;
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.center,

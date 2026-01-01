@@ -53,7 +53,9 @@ class _DualReportPageState extends State<DualReportPage> {
   }
 
   void _disposeReportIsolate({bool canceled = false}) {
-    if (canceled && _reportCompleter != null && !_reportCompleter!.isCompleted) {
+    if (canceled &&
+        _reportCompleter != null &&
+        !_reportCompleter!.isCompleted) {
       _reportCompleter!.completeError(StateError('report canceled'));
     }
     _reportSubscription?.cancel();
@@ -199,8 +201,7 @@ class _DualReportPageState extends State<DualReportPage> {
     }
 
     setState(() {
-      _friendDisplayName =
-          selectedFriend['displayName'] as String? ?? '好友';
+      _friendDisplayName = selectedFriend['displayName'] as String? ?? '好友';
     });
 
     // 生成完整的双人报告
@@ -249,6 +250,7 @@ class _DualReportPageState extends State<DualReportPage> {
         });
       }
 
+      if (!mounted) return;
       final appState = Provider.of<AppState>(context, listen: false);
       final dbPath = appState.databaseService.dbPath;
       if (dbPath == null || dbPath.isEmpty) {
@@ -291,7 +293,7 @@ class _DualReportPageState extends State<DualReportPage> {
 
       final yearlyStats =
           (reportData['yearlyStats'] as Map?)?.cast<String, dynamic>() ??
-              <String, dynamic>{};
+          <String, dynamic>{};
       await logger.debug(
         'DualReportPage',
         'yearlyStats emoji keys: my=${yearlyStats['myTopEmojiMd5'] ?? 'null'} '
@@ -309,11 +311,8 @@ class _DualReportPageState extends State<DualReportPage> {
             'DualReportPage',
             'top emoji missing, recompute in main isolate: friend=$friendUsername year=$actualYear',
           );
-          final topEmoji =
-              await appState.databaseService.getSessionYearlyTopEmojiMd5(
-            friendUsername,
-            actualYear,
-          );
+          final topEmoji = await appState.databaseService
+              .getSessionYearlyTopEmojiMd5(friendUsername, actualYear);
           yearlyStats['myTopEmojiMd5'] = topEmoji['myTopEmojiMd5'];
           yearlyStats['friendTopEmojiMd5'] = topEmoji['friendTopEmojiMd5'];
           yearlyStats['myTopEmojiUrl'] = topEmoji['myTopEmojiUrl'];
@@ -357,6 +356,7 @@ class _DualReportPageState extends State<DualReportPage> {
         'DualReportPage',
         '========== DUAL REPORT DONE ==========',
       );
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -372,6 +372,7 @@ class _DualReportPageState extends State<DualReportPage> {
         stackTrace,
       );
 
+      if (!mounted) return;
       // 显示错误信息
       ScaffoldMessenger.of(
         context,
@@ -386,9 +387,7 @@ class _DualReportPageState extends State<DualReportPage> {
     }
   }
 
-  
   Map<String, dynamic> _cloneForCache(Map<String, dynamic> data) {
-
     try {
       return jsonDecode(jsonEncode(data)) as Map<String, dynamic>;
     } catch (_) {
@@ -397,8 +396,8 @@ class _DualReportPageState extends State<DualReportPage> {
   }
 
   void _stripEmojiDataUrls(Map<String, dynamic> reportData) {
-    final yearlyStats =
-        (reportData['yearlyStats'] as Map?)?.cast<String, dynamic>();
+    final yearlyStats = (reportData['yearlyStats'] as Map?)
+        ?.cast<String, dynamic>();
     if (yearlyStats == null || yearlyStats.isEmpty) return;
     yearlyStats.remove('myTopEmojiDataUrl');
     yearlyStats.remove('friendTopEmojiDataUrl');
@@ -406,11 +405,10 @@ class _DualReportPageState extends State<DualReportPage> {
   }
 
   Future<void> _cacheTopEmojiAssets(Map<String, dynamic> reportData) async {
-
     try {
       final yearlyStats =
           (reportData['yearlyStats'] as Map?)?.cast<String, dynamic>() ??
-              <String, dynamic>{};
+          <String, dynamic>{};
       if (yearlyStats.isEmpty) return;
 
       await logger.debug(
@@ -430,10 +428,12 @@ class _DualReportPageState extends State<DualReportPage> {
       final friendMd5 = yearlyStats['friendTopEmojiMd5'] as String?;
       final friendUrl = yearlyStats['friendTopEmojiUrl'] as String?;
 
-      final myPath =
-          await _ensureEmojiCached(emojiDir, myMd5, myUrl ?? '');
-      final friendPath =
-          await _ensureEmojiCached(emojiDir, friendMd5, friendUrl ?? '');
+      final myPath = await _ensureEmojiCached(emojiDir, myMd5, myUrl ?? '');
+      final friendPath = await _ensureEmojiCached(
+        emojiDir,
+        friendMd5,
+        friendUrl ?? '',
+      );
 
       await logger.debug(
         'DualReportPage',
@@ -519,7 +519,6 @@ class _DualReportPageState extends State<DualReportPage> {
     String url,
     String? md5,
   ) async {
-
     try {
       final response = await http
           .get(Uri.parse(url))

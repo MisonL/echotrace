@@ -376,8 +376,10 @@ class AppState extends ChangeNotifier {
           final filePath = entity.path.toLowerCase();
 
           if (!filePath.endsWith('.dat')) continue;
-          if (filePath.contains('db_storage') || filePath.contains('database'))
+          if (filePath.contains('db_storage') ||
+              filePath.contains('database')) {
             continue;
+          }
 
           final fileName = entity.path.split(Platform.pathSeparator).last;
           final baseLower = p.basenameWithoutExtension(fileName).toLowerCase();
@@ -420,7 +422,9 @@ class AppState extends ChangeNotifier {
               updateThreshold = foundCount + 100;
               notifyListeners();
             }
-          } catch (_) {}
+          } catch (_) {
+            // 忽略读取文件属性失败
+          }
         }
       }
     } catch (e, stackTrace) {
@@ -804,7 +808,9 @@ class AppState extends ChangeNotifier {
           dbFiles.add(entity);
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // 忽略文件列表读取错误
+    }
 
     return dbFiles;
   }
@@ -814,7 +820,9 @@ class AppState extends ChangeNotifier {
     try {
       // 仅使用备份模式连接解密后的数据库
       await _connectDecryptedBackupDatabase();
-    } catch (e) {}
+    } catch (e) {
+      // 忽略连接错误
+    }
   }
 
   /// 连接解密后的备份数据库
@@ -1145,6 +1153,8 @@ class BulkJobHandle {
     try {
       final pool = _pool ?? (await _poolCompleter.future);
       await pool.close();
-    } catch (_) {}
+    } catch (_) {
+      // 忽略关闭时的错误
+    }
   }
 }

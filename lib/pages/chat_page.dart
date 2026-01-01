@@ -426,6 +426,8 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     final initialRange = DateTimeRange(start: firstDate, end: lastDate);
     final now = DateTime.now();
 
+    if (!mounted) return null;
+
     return showModalBottomSheet<_BulkRangeSelection>(
       context: context,
       builder: (sheetContext) {
@@ -541,8 +543,12 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
       setState(() {
         _availableMessageDates = keys;
         _availableMessageDateList = normalizedDates;
-        _availableStartDate = normalizedDates.isEmpty ? null : normalizedDates.first;
-        _availableEndDate = normalizedDates.isEmpty ? null : normalizedDates.last;
+        _availableStartDate = normalizedDates.isEmpty
+            ? null
+            : normalizedDates.first;
+        _availableEndDate = normalizedDates.isEmpty
+            ? null
+            : normalizedDates.last;
         _availableDatesSessionId = session.username;
       });
     } finally {
@@ -579,7 +585,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     if (_availableMessageDateList.isEmpty) return null;
     final index = _findInsertIndex(date);
     if (index >= _availableMessageDateList.length) return null;
-    if (_availableMessageDateList[index].isAtSameMomentAs(_normalizeDate(date))) {
+    if (_availableMessageDateList[index].isAtSameMomentAs(
+      _normalizeDate(date),
+    )) {
       return index + 1 < _availableMessageDateList.length
           ? _availableMessageDateList[index + 1]
           : null;
@@ -698,8 +706,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     final anchor = newer ? _jumpWindowEndDate : _jumpWindowStartDate;
     if (session == null || anchor == null) return;
 
-    final targetDate =
-        newer ? _findNextAvailableDate(anchor) : _findPreviousAvailableDate(anchor);
+    final targetDate = newer
+        ? _findNextAvailableDate(anchor)
+        : _findPreviousAvailableDate(anchor);
     if (targetDate == null) {
       setState(() {
         if (newer) {
@@ -827,8 +836,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setLocalState) {
-            final earliestMonth =
-                DateTime(startDate.year, startDate.month, 1);
+            final earliestMonth = DateTime(startDate.year, startDate.month, 1);
             final latestMonth = DateTime(endDate.year, endDate.month, 1);
             final monthLabel =
                 '${currentMonth.year}-${currentMonth.month.toString().padLeft(2, '0')}';
@@ -836,8 +844,11 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
               currentMonth.year,
               currentMonth.month,
             );
-            final firstWeekday =
-                DateTime(currentMonth.year, currentMonth.month, 1).weekday;
+            final firstWeekday = DateTime(
+              currentMonth.year,
+              currentMonth.month,
+              1,
+            ).weekday;
             final leadingEmpty = (firstWeekday - 1) % 7;
             final totalCells =
                 ((leadingEmpty + daysInMonth + 6) / 7).floor() * 7;
@@ -876,10 +887,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(10),
                         border: isToday && !isSelected
                             ? Border.all(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.4),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.4),
                               )
                             : null,
                       ),
@@ -889,21 +899,19 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                           children: [
                             Text(
                               '$dayNumber',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: isAvailable
                                         ? (isSelected
-                                            ? Colors.white
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onSurface)
+                                              ? Colors.white
+                                              : Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurface)
                                         : Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.3),
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.3),
                                   ),
                             ),
                             const SizedBox(height: 4),
@@ -913,11 +921,11 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                               decoration: BoxDecoration(
                                 color: isAvailable
                                     ? (isSelected
-                                        ? Colors.white.withValues(alpha: 0.9)
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withValues(alpha: 0.6))
+                                          ? Colors.white.withValues(alpha: 0.9)
+                                          : Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withValues(alpha: 0.6))
                                     : Colors.transparent,
                                 shape: BoxShape.circle,
                               ),
@@ -939,8 +947,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                   540.0,
                   constraints.maxHeight - 40,
                 );
-                final cellSize =
-                    ((dialogWidth - 36) / 7).clamp(34.0, 54.0);
+                final cellSize = ((dialogWidth - 36) / 7).clamp(34.0, 54.0);
                 final aspectRatio = cellSize / (cellSize + 10);
 
                 return Dialog(
@@ -965,9 +972,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                             children: [
                               Text(
                                 '跳转到日期',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
+                                style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                               const Spacer(),
@@ -993,29 +998,27 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                               IconButton(
                                 onPressed: canPrev
                                     ? () => setLocalState(() {
-                                          currentMonth = DateTime(
-                                            currentMonth.year,
-                                            currentMonth.month - 1,
-                                          );
-                                        })
+                                        currentMonth = DateTime(
+                                          currentMonth.year,
+                                          currentMonth.month - 1,
+                                        );
+                                      })
                                     : null,
                                 icon: const Icon(Icons.chevron_left_rounded),
                               ),
                               Text(
                                 monthLabel,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
+                                style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                               IconButton(
                                 onPressed: canNext
                                     ? () => setLocalState(() {
-                                          currentMonth = DateTime(
-                                            currentMonth.year,
-                                            currentMonth.month + 1,
-                                          );
-                                        })
+                                        currentMonth = DateTime(
+                                          currentMonth.year,
+                                          currentMonth.month + 1,
+                                        );
+                                      })
                                     : null,
                                 icon: const Icon(Icons.chevron_right_rounded),
                               ),
@@ -1058,11 +1061,13 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: _availableMessageDates
-                                          .contains(_formatDateOnly(selected))
-                                      ? () => Navigator.of(dialogContext).pop(
-                                            selected,
-                                          )
+                                  onPressed:
+                                      _availableMessageDates.contains(
+                                        _formatDateOnly(selected),
+                                      )
+                                      ? () => Navigator.of(
+                                          dialogContext,
+                                        ).pop(selected)
                                       : null,
                                   child: const Text('跳转'),
                                 ),
@@ -1216,6 +1221,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
         endSec > startSec &&
         fastLocalTypes != null &&
         fastLocalTypes.isNotEmpty) {
+      if (!mounted) return [];
       final db = context.read<AppState>().databaseService;
       final sources = await db.prepareBulkMessageQuerySources(session.username);
 
@@ -1263,6 +1269,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
     // 通用 fallback：分段拉取全量消息再 predicate 过滤（较慢，但兼容所有消息类型）。
     if (startSec != null && endSec != null && endSec > startSec) {
+      if (!mounted) return [];
       final db = context.read<AppState>().databaseService;
       final results = <Message>[];
       final totalRange = endSec - startSec;
@@ -1362,8 +1369,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
     final position = _scrollController.position;
     final distanceToTop = position.pixels;
-    final distanceToBottom =
-        position.maxScrollExtent - position.pixels;
+    final distanceToBottom = position.maxScrollExtent - position.pixels;
 
     if (_isJumpContextMode) {
       if (!_isLoadingJumpOlder &&
@@ -1633,13 +1639,15 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
       // 异步加载头像（使用全局缓存）
       try {
-        final appState = context.read<AppState>();
-        final usernamesToFetch = filteredSessions
-            .map((s) => s.username)
-            .where((u) => !appState.isAvatarCached(u))
-            .toList();
-        if (usernamesToFetch.isNotEmpty) {
-          await appState.fetchAndCacheAvatars(usernamesToFetch);
+        if (mounted) {
+          final appState = context.read<AppState>();
+          final usernamesToFetch = filteredSessions
+              .map((s) => s.username)
+              .where((u) => !appState.isAvatarCached(u))
+              .toList();
+          if (usernamesToFetch.isNotEmpty) {
+            await appState.fetchAndCacheAvatars(usernamesToFetch);
+          }
         }
       } catch (_) {}
     } catch (e, stackTrace) {
@@ -1679,6 +1687,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
     // 异步加载消息 - 初次只加载少量消息以提升性能
     try {
+      if (!mounted) return;
       final appState = context.read<AppState>();
       // 若我的头像尚未就绪，尝试补载
       if (_myAvatarUrl == null || _myAvatarUrl!.isEmpty) {
@@ -3110,8 +3119,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                                                 ),
                                                 cacheExtent: 400,
                                                 addAutomaticKeepAlives: false,
-                                                itemCount:
-                                                    _messages.length + 1,
+                                                itemCount: _messages.length + 1,
                                                 itemBuilder: (context, index) {
                                                   if (index == 0) {
                                                     return _buildLoadMoreIndicator();
@@ -3179,9 +3187,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                                                   final contextKey =
                                                       _messageGlobalKeys
                                                           .putIfAbsent(
-                                                    messageKey,
-                                                    () => GlobalKey(),
-                                                  );
+                                                            messageKey,
+                                                            () => GlobalKey(),
+                                                          );
 
                                                   return KeyedSubtree(
                                                     key: contextKey,
@@ -3192,8 +3200,8 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                                                       message: message,
                                                       isFromMe:
                                                           _isMessageFromMe(
-                                                        message,
-                                                      ),
+                                                            message,
+                                                          ),
                                                       senderDisplayName:
                                                           senderName,
                                                       sessionUsername:
@@ -3615,8 +3623,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                               Text(
                                 '${table.tableName} · ${table.messageCount} 条',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
                               ),
                             ],
@@ -3639,7 +3648,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.35,
+        ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.12),

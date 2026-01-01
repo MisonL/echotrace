@@ -19,9 +19,11 @@ class UserAvatar extends StatelessWidget {
       backgroundImage: hasAvatar ? NetworkImage(member.avatarUrl!) : null,
       child: hasAvatar
           ? null
-          : Text(member.displayName.isNotEmpty
-              ? member.displayName[0].toUpperCase()
-              : '?'),
+          : Text(
+              member.displayName.isNotEmpty
+                  ? member.displayName[0].toUpperCase()
+                  : '?',
+            ),
     );
   }
 }
@@ -34,9 +36,7 @@ class GroupMembersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('${groupInfo.displayName} 成员'),
-      ),
+      appBar: AppBar(title: Text('${groupInfo.displayName} 成员')),
       body: GroupMembersContent(groupInfo: groupInfo),
     );
   }
@@ -78,8 +78,9 @@ class _GroupMembersContentState extends State<GroupMembersContent> {
     if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final members =
-          await _groupChatService.getGroupMembers(widget.groupInfo.username);
+      final members = await _groupChatService.getGroupMembers(
+        widget.groupInfo.username,
+      );
       if (!mounted) return;
       setState(() {
         _members = members;
@@ -89,8 +90,9 @@ class _GroupMembersContentState extends State<GroupMembersContent> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('加载成员列表失败: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('加载成员列表失败: $e')));
     }
   }
 
@@ -105,22 +107,28 @@ class _GroupMembersContentState extends State<GroupMembersContent> {
 
   Future<void> _exportToJson() async {
     if (_members.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('没有成员数据可以导出')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('没有成员数据可以导出')));
       return;
     }
     final jsonString = jsonEncode(_members.map((m) => m.toJson()).toList());
     try {
       final fileName = 'group_members_${widget.groupInfo.displayName}.json';
       await FileSaver.instance.saveFile(
-          name: fileName,
-          bytes: utf8.encode(jsonString),
-          mimeType: MimeType.json);
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('成功导出到下载目录: $fileName')));
+        name: fileName,
+        bytes: utf8.encode(jsonString),
+        mimeType: MimeType.json,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('成功导出到下载目录: $fileName')));
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('导出失败: $e')));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('导出失败: $e')));
     }
   }
 
@@ -167,20 +175,24 @@ class _GroupMembersContentState extends State<GroupMembersContent> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _filteredMembers.isEmpty
-                  ? const Center(child: Text('未找到匹配的成员'))
-                  : ListView.builder(
-                      itemCount: _filteredMembers.length,
-                      itemBuilder: (context, index) {
-                        final member = _filteredMembers[index];
-                        return ListTile(
-                          leading: UserAvatar(member: member),
-                          title: Text(member.displayName),
-                          subtitle: Text(member.username,
-                              style: const TextStyle(
-                                  color: Colors.grey, fontSize: 12)),
-                        );
-                      },
-                    ),
+              ? const Center(child: Text('未找到匹配的成员'))
+              : ListView.builder(
+                  itemCount: _filteredMembers.length,
+                  itemBuilder: (context, index) {
+                    final member = _filteredMembers[index];
+                    return ListTile(
+                      leading: UserAvatar(member: member),
+                      title: Text(member.displayName),
+                      subtitle: Text(
+                        member.username,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );

@@ -54,10 +54,7 @@ class _MediaExportItem {
   final String relativePath;
   final String kind;
 
-  const _MediaExportItem({
-    required this.relativePath,
-    required this.kind,
-  });
+  const _MediaExportItem({required this.relativePath, required this.kind});
 }
 
 class MediaExportProgress {
@@ -81,10 +78,7 @@ class MediaExportProgress {
 }
 
 class _MediaExportHelper {
-  _MediaExportHelper(
-    this._databaseService,
-    this._options,
-  );
+  _MediaExportHelper(this._databaseService, this._options);
 
   final DatabaseService _databaseService;
   final MediaExportOptions _options;
@@ -110,9 +104,9 @@ class _MediaExportHelper {
     await logger.info(
       'ChatExportMedia',
       'prepare start: messages=${messages.length} '
-      'images=${_options.exportImages} '
-      'voices=${_options.exportVoices} '
-      'emojis=${_options.exportEmojis}',
+          'images=${_options.exportImages} '
+          'voices=${_options.exportVoices} '
+          'emojis=${_options.exportEmojis}',
     );
     final tasks = <_MediaTask>[];
     final seen = <String>{};
@@ -150,16 +144,19 @@ class _MediaExportHelper {
         try {
           switch (task.kind) {
             case 'image':
-              await _exportImage(task.message)
-                  .timeout(const Duration(minutes: 2));
+              await _exportImage(
+                task.message,
+              ).timeout(const Duration(minutes: 2));
               break;
             case 'voice':
-              await _exportVoice(task.message)
-                  .timeout(const Duration(minutes: 2));
+              await _exportVoice(
+                task.message,
+              ).timeout(const Duration(minutes: 2));
               break;
             case 'emoji':
-              await _exportEmoji(task.message)
-                  .timeout(const Duration(minutes: 2));
+              await _exportEmoji(
+                task.message,
+              ).timeout(const Duration(minutes: 2));
               break;
             default:
               break;
@@ -186,8 +183,8 @@ class _MediaExportHelper {
     await logger.info(
       'ChatExportMedia',
       'prepare done total=$total exported=$_exportedCount '
-      'voices=$_exportedVoiceCount images=$_exportedImageCount '
-      'emojis=$_exportedEmojiCount',
+          'voices=$_exportedVoiceCount images=$_exportedImageCount '
+          'emojis=$_exportedEmojiCount',
     );
     _prepared = true;
   }
@@ -249,7 +246,7 @@ class _MediaExportHelper {
     await logger.debug(
       'ChatExportMedia',
       'image export start localId=${message.localId} md5=${message.imageMd5} '
-      'dat=${message.imageDatName}',
+          'dat=${message.imageDatName}',
     );
     _notifyMediaProgress('image', success: false);
     final cached = _cache[key];
@@ -288,15 +285,18 @@ class _MediaExportHelper {
           );
           _notifyMediaProgress('image', success: true);
           final item = _MediaExportItem(
-            relativePath:
-                _relativePath('images', p.basename(cachedExport)),
+            relativePath: _relativePath('images', p.basename(cachedExport)),
             kind: 'image',
           );
           _cache[key] = item;
           return item;
         }
-        final destPath =
-            await _copyWithUniqueName(sourceFile, 'images', baseName, key);
+        final destPath = await _copyWithUniqueName(
+          sourceFile,
+          'images',
+          baseName,
+          key,
+        );
         if (destPath != null) {
           await logger.debug(
             'ChatExportMedia',
@@ -304,8 +304,7 @@ class _MediaExportHelper {
           );
           _notifyMediaProgress('image', success: true);
           final item = _MediaExportItem(
-            relativePath:
-                _relativePath('images', p.basename(destPath)),
+            relativePath: _relativePath('images', p.basename(destPath)),
             kind: 'image',
           );
           _cache[key] = item;
@@ -452,8 +451,12 @@ class _MediaExportHelper {
 
     _notifyStage('正在复制语音...');
     final baseName = _sanitizeFileName(p.basename(voiceFile.path));
-    final destPath =
-        await _copyWithUniqueName(voiceFile, 'voices', baseName, key);
+    final destPath = await _copyWithUniqueName(
+      voiceFile,
+      'voices',
+      baseName,
+      key,
+    );
     if (destPath == null) return null;
     await logger.debug(
       'ChatExportMedia',
@@ -544,8 +547,12 @@ class _MediaExportHelper {
         _cache[key] = item;
         return item;
       }
-      final destPath =
-          await _copyWithUniqueName(File(existing), 'emojis', baseName, key);
+      final destPath = await _copyWithUniqueName(
+        File(existing),
+        'emojis',
+        baseName,
+        key,
+      );
       if (destPath == null) return null;
       await logger.debug(
         'ChatExportMedia',
@@ -561,8 +568,9 @@ class _MediaExportHelper {
     }
 
     if (url.isEmpty) return null;
-    final baseForDownload =
-        md5.isNotEmpty ? md5 : url.hashCode.toUnsigned(32).toString();
+    final baseForDownload = md5.isNotEmpty
+        ? md5
+        : url.hashCode.toUnsigned(32).toString();
     final existingDownloaded = _findExported('emojis', baseForDownload);
     if (existingDownloaded != null) {
       await logger.debug(
@@ -658,7 +666,10 @@ class _MediaExportHelper {
         ext == '.webp';
   }
 
-  Future<String?> _decryptImageToExport(Message message, String cacheKey) async {
+  Future<String?> _decryptImageToExport(
+    Message message,
+    String cacheKey,
+  ) async {
     final datName = message.imageDatName;
     final config = _options.configService;
     if (datName == null || datName.isEmpty || config == null) {
@@ -756,7 +767,9 @@ class _MediaExportHelper {
       );
       final emojiDir = Directory(p.join(docs.path, 'EchoTrace', 'Emojis'));
       if (!await emojiDir.exists()) return null;
-      final base = md5.isNotEmpty ? md5 : url.hashCode.toUnsigned(32).toString();
+      final base = md5.isNotEmpty
+          ? md5
+          : url.hashCode.toUnsigned(32).toString();
       for (final ext in const ['.gif', '.png', '.webp', '.jpg', '.jpeg']) {
         final candidate = File(p.join(emojiDir.path, '$base$ext'));
         if (await candidate.exists()) return candidate.path;
@@ -773,13 +786,15 @@ class _MediaExportHelper {
         return null;
       }
       final contentType = response.headers['content-type'] ?? '';
-      final ext = _detectImageExtension(bytes) ?? _pickExtension(url, contentType);
-      final base =
-          md5.isNotEmpty ? md5 : url.hashCode.toUnsigned(32).toString();
-    final fileName = _sanitizeFileName('$base$ext');
-    final outPath = p.join(_options.mediaRoot, 'emojis', fileName);
-    final file = File(outPath);
-    await file.writeAsBytes(bytes, flush: true);
+      final ext =
+          _detectImageExtension(bytes) ?? _pickExtension(url, contentType);
+      final base = md5.isNotEmpty
+          ? md5
+          : url.hashCode.toUnsigned(32).toString();
+      final fileName = _sanitizeFileName('$base$ext');
+      final outPath = p.join(_options.mediaRoot, 'emojis', fileName);
+      final file = File(outPath);
+      await file.writeAsBytes(bytes, flush: true);
       return outPath;
     } catch (_) {
       return null;
@@ -916,16 +931,10 @@ class _MediaExportHelper {
         'copy start src=${source.path} dest=$destPath',
       );
       await source.copy(destPath).timeout(timeout);
-      await logger.debug(
-        'ChatExportMedia',
-        'copy done dest=$destPath',
-      );
+      await logger.debug('ChatExportMedia', 'copy done dest=$destPath');
       return true;
     } on TimeoutException {
-      await logger.warning(
-        'ChatExportMedia',
-        'copy timeout dest=$destPath',
-      );
+      await logger.warning('ChatExportMedia', 'copy timeout dest=$destPath');
       return false;
     } catch (e) {
       await logger.warning(
@@ -1069,8 +1078,7 @@ class _MediaExportHelper {
 
   _MediaTask? _taskFromMessage(Message msg) {
     if (msg.isImageMessage && _options.exportImages) {
-      final key =
-          msg.imageMd5 ?? msg.imageDatName ?? 'img_${msg.localId}';
+      final key = msg.imageMd5 ?? msg.imageDatName ?? 'img_${msg.localId}';
       return _MediaTask(kind: 'image', key: key, message: msg);
     }
     if (msg.isVoiceMessage && _options.exportVoices) {
@@ -2011,9 +2019,7 @@ class ChatExportService {
       final sessionData = {
         'wxid': _sanitizeUsername(session.username),
         'nickname':
-            contactInfo['nickname'] ??
-            session.displayName ??
-            session.username,
+            contactInfo['nickname'] ?? session.displayName ?? session.username,
         'remark': _getRemarkOrAlias(contactInfo),
         'displayName': session.displayName ?? session.username,
         'type': session.typeDescription,
@@ -2106,7 +2112,10 @@ class ChatExportService {
       await sink.flush();
       return true;
     } catch (e, stack) {
-      await logger.error('ChatExportService', 'exportToJsonStream 失败: $e\n$stack');
+      await logger.error(
+        'ChatExportService',
+        'exportToJsonStream 失败: $e\n$stack',
+      );
       return false;
     } finally {
       await sink?.close();
@@ -2243,7 +2252,10 @@ class ChatExportService {
       await sink.flush();
       return true;
     } catch (e, stack) {
-      await logger.error('ChatExportService', 'exportToHtmlStream 失败: $e\n$stack');
+      await logger.error(
+        'ChatExportService',
+        'exportToHtmlStream 失败: $e\n$stack',
+      );
       return false;
     } finally {
       await sink?.close();
@@ -2361,7 +2373,10 @@ class ChatExportService {
               senderRole = senderDisplayNames[msg.senderUsername] ?? '群成员';
               senderWxid = _sanitizeUsername(msg.senderUsername ?? '');
               final info = senderContactInfos[msg.senderUsername] ?? {};
-              senderNickname = _resolvePreferredName(info, fallback: senderRole);
+              senderNickname = _resolvePreferredName(
+                info,
+                fallback: senderRole,
+              );
               senderRemark = _getRemarkOrAlias(info);
             } else {
               senderRole = session.displayName ?? session.username;
@@ -2460,7 +2475,10 @@ class ChatExportService {
       return await _writeBytesInBackground(filePath, Uint8List.fromList(bytes));
     } catch (e, stack) {
       workbook.dispose();
-      await logger.error('ChatExportService', 'exportToExcelStream 失败: $e\n$stack');
+      await logger.error(
+        'ChatExportService',
+        'exportToExcelStream 失败: $e\n$stack',
+      );
       return false;
     }
   }
@@ -2569,7 +2587,10 @@ class ChatExportService {
             } else if (session.isGroup && msg.senderUsername != null) {
               senderRole = senderDisplayNames[msg.senderUsername] ?? '群成员';
               final info = senderContactInfos[msg.senderUsername] ?? {};
-              senderNickname = _resolvePreferredName(info, fallback: senderRole);
+              senderNickname = _resolvePreferredName(
+                info,
+                fallback: senderRole,
+              );
             } else {
               senderRole = session.displayName ?? session.username;
               senderNickname = _resolvePreferredName(
@@ -2745,18 +2766,26 @@ class ChatExportService {
     buffer.writeln('        lastShownTimestamp = ts;');
     buffer.writeln('        return true;');
     buffer.writeln('      }');
-    buffer.writeln('      if (Math.abs(ts - lastShownTimestamp) >= TIME_GAP_SECONDS) {');
+    buffer.writeln(
+      '      if (Math.abs(ts - lastShownTimestamp) >= TIME_GAP_SECONDS) {',
+    );
     buffer.writeln('        lastShownTimestamp = ts;');
     buffer.writeln('        return true;');
     buffer.writeln('      }');
     buffer.writeln('      return false;');
     buffer.writeln('    }');
-    buffer.writeln('    function createMessageElement(msg, showDate, showTime) {');
+    buffer.writeln(
+      '    function createMessageElement(msg, showDate, showTime) {',
+    );
     buffer.writeln('      const fragment = document.createDocumentFragment();');
     buffer.writeln('      if (showDate || showTime) {');
-    buffer.writeln('        const dateDivider = document.createElement("div");');
+    buffer.writeln(
+      '        const dateDivider = document.createElement("div");',
+    );
     buffer.writeln('        dateDivider.className = "date-divider";');
-    buffer.writeln('        dateDivider.textContent = showDate ? msg.date : msg.time;');
+    buffer.writeln(
+      '        dateDivider.textContent = showDate ? msg.date : msg.time;',
+    );
     buffer.writeln('        fragment.appendChild(dateDivider);');
     buffer.writeln('      }');
     buffer.writeln('      const messageEl = document.createElement("div");');
@@ -2770,17 +2799,23 @@ class ChatExportService {
       '        `<div class="avatar"><img src="data:image/png;base64,\${avatarIndex[msg.avatarKey].base64}" alt="\${avatarIndex[msg.avatarKey].displayName}"/></div>` :',
     );
     buffer.writeln('        `<div class="avatar placeholder"></div>`;');
-    buffer.writeln('      const bubbleClass = msg.isMedia ? "message-bubble media" : "message-bubble";');
+    buffer.writeln(
+      '      const bubbleClass = msg.isMedia ? "message-bubble media" : "message-bubble";',
+    );
     buffer.writeln(
       '      messageEl.innerHTML = `<div class="message-row">\${avatarHtml}<div class="\${bubbleClass}"><div class="content">\${msg.content}</div></div></div>`;',
     );
-    buffer.writeln('      messageEl.setAttribute("data-time", msg.timeTooltip || msg.time);');
+    buffer.writeln(
+      '      messageEl.setAttribute("data-time", msg.timeTooltip || msg.time);',
+    );
     buffer.writeln('      fragment.appendChild(messageEl);');
     buffer.writeln('      return fragment;');
     buffer.writeln('    }');
     buffer.writeln('    ');
     buffer.writeln('    function renderMessages(start, end, toTop = true) {');
-    buffer.writeln('      const container = document.getElementById("messages-container");');
+    buffer.writeln(
+      '      const container = document.getElementById("messages-container");',
+    );
     buffer.writeln('      if (!container) return;');
     buffer.writeln('      const fragment = document.createDocumentFragment();');
     buffer.writeln('      let lastDate = null;');
@@ -2789,20 +2824,28 @@ class ChatExportService {
     buffer.writeln('        const showDate = msg.date !== lastDate;');
     buffer.writeln('        const showTime = shouldShowTime(msg.timestamp);');
     buffer.writeln('        lastDate = msg.date;');
-    buffer.writeln('        fragment.appendChild(createMessageElement(msg, showDate, showTime));');
+    buffer.writeln(
+      '        fragment.appendChild(createMessageElement(msg, showDate, showTime));',
+    );
     buffer.writeln('      }');
     buffer.writeln('      if (toTop) {');
-    buffer.writeln('        container.insertBefore(fragment, container.firstChild);');
+    buffer.writeln(
+      '        container.insertBefore(fragment, container.firstChild);',
+    );
     buffer.writeln('      } else {');
     buffer.writeln('        container.appendChild(fragment);');
     buffer.writeln('      }');
     buffer.writeln('    }');
     buffer.writeln('    ');
     buffer.writeln('    function loadInitialMessages() {');
-    buffer.writeln('      const container = document.getElementById("messages-container");');
+    buffer.writeln(
+      '      const container = document.getElementById("messages-container");',
+    );
     buffer.writeln('      if (!container) return;');
     buffer.writeln('      container.innerHTML = "";');
-    buffer.writeln('      const start = Math.max(0, messagesData.length - INITIAL_BATCH);');
+    buffer.writeln(
+      '      const start = Math.max(0, messagesData.length - INITIAL_BATCH);',
+    );
     buffer.writeln('      renderMessages(start, messagesData.length, false);');
     buffer.writeln('      loadedStart = start;');
     buffer.writeln('      updateScrollButton();');
@@ -2812,16 +2855,24 @@ class ChatExportService {
     buffer.writeln('    function loadMoreMessages() {');
     buffer.writeln('      if (isLoading || allLoaded) return;');
     buffer.writeln('      isLoading = true;');
-    buffer.writeln('      const nextStart = Math.max(0, loadedStart - BATCH_SIZE);');
+    buffer.writeln(
+      '      const nextStart = Math.max(0, loadedStart - BATCH_SIZE);',
+    );
     buffer.writeln('      if (nextStart === loadedStart) {');
     buffer.writeln('        allLoaded = true;');
     buffer.writeln('        isLoading = false;');
     buffer.writeln('        return;');
     buffer.writeln('      }');
-    buffer.writeln('      const oldScrollHeight = document.getElementById("messages-container").scrollHeight;');
+    buffer.writeln(
+      '      const oldScrollHeight = document.getElementById("messages-container").scrollHeight;',
+    );
     buffer.writeln('      renderMessages(nextStart, loadedStart, true);');
-    buffer.writeln('      const newScrollHeight = document.getElementById("messages-container").scrollHeight;');
-    buffer.writeln('      document.getElementById("messages-container").scrollTop = newScrollHeight - oldScrollHeight;');
+    buffer.writeln(
+      '      const newScrollHeight = document.getElementById("messages-container").scrollHeight;',
+    );
+    buffer.writeln(
+      '      document.getElementById("messages-container").scrollTop = newScrollHeight - oldScrollHeight;',
+    );
     buffer.writeln('      loadedStart = nextStart;');
     buffer.writeln('      isLoading = false;');
     buffer.writeln('      if (loadedStart === 0) {');
@@ -2830,37 +2881,63 @@ class ChatExportService {
     buffer.writeln('    }');
     buffer.writeln('    ');
     buffer.writeln('    function scrollToBottom() {');
-    buffer.writeln('      const container = document.getElementById("messages-container");');
+    buffer.writeln(
+      '      const container = document.getElementById("messages-container");',
+    );
     buffer.writeln('      if (!container) return;');
     buffer.writeln('      container.scrollTop = container.scrollHeight;');
     buffer.writeln('    }');
     buffer.writeln('    ');
     buffer.writeln('    function updateScrollButton() {');
-    buffer.writeln('      const container = document.getElementById("messages-container");');
-    buffer.writeln('      const button = document.getElementById("scroll-to-bottom");');
+    buffer.writeln(
+      '      const container = document.getElementById("messages-container");',
+    );
+    buffer.writeln(
+      '      const button = document.getElementById("scroll-to-bottom");',
+    );
     buffer.writeln('      if (!container || !button) return;');
-    buffer.writeln('      const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;');
-    buffer.writeln('      button.style.display = nearBottom ? "none" : "flex";');
+    buffer.writeln(
+      '      const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;',
+    );
+    buffer.writeln(
+      '      button.style.display = nearBottom ? "none" : "flex";',
+    );
     buffer.writeln('    }');
     buffer.writeln('    ');
-    buffer.writeln('    document.getElementById("messages-container").addEventListener("scroll", () => {');
-    buffer.writeln('      if (document.getElementById("messages-container").scrollTop === 0) {');
+    buffer.writeln(
+      '    document.getElementById("messages-container").addEventListener("scroll", () => {',
+    );
+    buffer.writeln(
+      '      if (document.getElementById("messages-container").scrollTop === 0) {',
+    );
     buffer.writeln('        loadMoreMessages();');
     buffer.writeln('      }');
     buffer.writeln('      updateScrollButton();');
     buffer.writeln('    });');
     buffer.writeln('    ');
-    buffer.writeln('    document.getElementById("scroll-to-bottom").addEventListener("click", scrollToBottom);');
+    buffer.writeln(
+      '    document.getElementById("scroll-to-bottom").addEventListener("click", scrollToBottom);',
+    );
     buffer.writeln('    ');
     buffer.writeln('    if (document.getElementById("info-menu-btn")) {');
-    buffer.writeln('      document.getElementById("info-menu-btn").addEventListener("click", () => {');
-    buffer.writeln('        document.getElementById("info-menu").classList.toggle("show");');
+    buffer.writeln(
+      '      document.getElementById("info-menu-btn").addEventListener("click", () => {',
+    );
+    buffer.writeln(
+      '        document.getElementById("info-menu").classList.toggle("show");',
+    );
     buffer.writeln('      });');
     buffer.writeln('      document.addEventListener("click", (event) => {');
-    buffer.writeln('        const menu = document.getElementById("info-menu");');
-    buffer.writeln('        const btn = document.getElementById("info-menu-btn");');
+    buffer.writeln(
+      '        const menu = document.getElementById("info-menu");',
+    );
+    buffer.writeln(
+      '        const btn = document.getElementById("info-menu-btn");',
+    );
     buffer.writeln('        if (!menu || !btn) return;');
-    buffer.writeln('        if (!menu.contains(event.target) && !btn.contains(event.target)) {');
+    buffer.writeln(
+      '        if (!menu.contains(event.target) && !btn.contains(event.target)) {',
+    );
     buffer.writeln('          menu.classList.remove("show");');
     buffer.writeln('        }');
     buffer.writeln('      });');
@@ -2932,11 +3009,8 @@ class ChatExportService {
     required String rawMyWxid,
     required String myDisplayName,
   }) async {
-    final targets = <String>{
-      session.username,
-      rawMyWxid,
-      ...senderUsernames,
-    }..removeWhere((u) => u.trim().isEmpty);
+    final targets = <String>{session.username, rawMyWxid, ...senderUsernames}
+      ..removeWhere((u) => u.trim().isEmpty);
 
     if (targets.isEmpty) return {};
 
@@ -3078,9 +3152,7 @@ class ChatExportService {
     required bool exportAvatars,
     _MediaExportItem? mediaItem,
   }) {
-    final msgDate = DateTime.fromMillisecondsSinceEpoch(
-      msg.createTime * 1000,
-    );
+    final msgDate = DateTime.fromMillisecondsSinceEpoch(msg.createTime * 1000);
     final isSend = msg.isSend == 1;
 
     String senderName = '';
@@ -3234,18 +3306,26 @@ class ChatExportService {
     buffer.writeln('        lastShownTimestamp = ts;');
     buffer.writeln('        return true;');
     buffer.writeln('      }');
-    buffer.writeln('      if (Math.abs(ts - lastShownTimestamp) >= TIME_GAP_SECONDS) {');
+    buffer.writeln(
+      '      if (Math.abs(ts - lastShownTimestamp) >= TIME_GAP_SECONDS) {',
+    );
     buffer.writeln('        lastShownTimestamp = ts;');
     buffer.writeln('        return true;');
     buffer.writeln('      }');
     buffer.writeln('      return false;');
     buffer.writeln('    }');
-    buffer.writeln('    function createMessageElement(msg, showDate, showTime) {');
+    buffer.writeln(
+      '    function createMessageElement(msg, showDate, showTime) {',
+    );
     buffer.writeln('      const fragment = document.createDocumentFragment();');
     buffer.writeln('      if (showDate || showTime) {');
-    buffer.writeln('        const dateDivider = document.createElement("div");');
+    buffer.writeln(
+      '        const dateDivider = document.createElement("div");',
+    );
     buffer.writeln('        dateDivider.className = "date-divider";');
-    buffer.writeln('        dateDivider.textContent = showDate ? msg.date : msg.time;');
+    buffer.writeln(
+      '        dateDivider.textContent = showDate ? msg.date : msg.time;',
+    );
     buffer.writeln('        fragment.appendChild(dateDivider);');
     buffer.writeln('      }');
     buffer.writeln('      const messageEl = document.createElement("div");');
@@ -3259,17 +3339,23 @@ class ChatExportService {
       '        `<div class="avatar"><img src="data:image/png;base64,\${avatarIndex[msg.avatarKey].base64}" alt="\${avatarIndex[msg.avatarKey].displayName}"/></div>` :',
     );
     buffer.writeln('        `<div class="avatar placeholder"></div>`;');
-    buffer.writeln('      const bubbleClass = msg.isMedia ? "message-bubble media" : "message-bubble";');
+    buffer.writeln(
+      '      const bubbleClass = msg.isMedia ? "message-bubble media" : "message-bubble";',
+    );
     buffer.writeln(
       '      messageEl.innerHTML = `<div class="message-row">\${avatarHtml}<div class="\${bubbleClass}"><div class="content">\${msg.content}</div></div></div>`;',
     );
-    buffer.writeln('      messageEl.setAttribute("data-time", msg.timeTooltip || msg.time);');
+    buffer.writeln(
+      '      messageEl.setAttribute("data-time", msg.timeTooltip || msg.time);',
+    );
     buffer.writeln('      fragment.appendChild(messageEl);');
     buffer.writeln('      return fragment;');
     buffer.writeln('    }');
     buffer.writeln('    ');
     buffer.writeln('    function renderMessages(start, end, toTop = true) {');
-    buffer.writeln('      const container = document.getElementById("messages-container");');
+    buffer.writeln(
+      '      const container = document.getElementById("messages-container");',
+    );
     buffer.writeln('      if (!container) return;');
     buffer.writeln('      const fragment = document.createDocumentFragment();');
     buffer.writeln('      let lastDate = null;');
@@ -3278,17 +3364,23 @@ class ChatExportService {
     buffer.writeln('        const showDate = msg.date !== lastDate;');
     buffer.writeln('        const showTime = shouldShowTime(msg.timestamp);');
     buffer.writeln('        lastDate = msg.date;');
-    buffer.writeln('        fragment.appendChild(createMessageElement(msg, showDate, showTime));');
+    buffer.writeln(
+      '        fragment.appendChild(createMessageElement(msg, showDate, showTime));',
+    );
     buffer.writeln('      }');
     buffer.writeln('      if (toTop) {');
-    buffer.writeln('        container.insertBefore(fragment, container.firstChild);');
+    buffer.writeln(
+      '        container.insertBefore(fragment, container.firstChild);',
+    );
     buffer.writeln('      } else {');
     buffer.writeln('        container.appendChild(fragment);');
     buffer.writeln('      }');
     buffer.writeln('    }');
     buffer.writeln('    ');
     buffer.writeln('    function loadInitialMessages() {');
-    buffer.writeln('      const container = document.getElementById("messages-container");');
+    buffer.writeln(
+      '      const container = document.getElementById("messages-container");',
+    );
     buffer.writeln('      if (!container) return;');
     buffer.writeln('      container.innerHTML = "";');
     buffer.writeln('      lastShownTimestamp = null;');
@@ -3298,7 +3390,9 @@ class ChatExportService {
     buffer.writeln('      renderMessages(start, messagesData.length, false);');
     buffer.writeln('      loadedStart = start;');
     buffer.writeln('      if (start === 0) allLoaded = true;');
-    buffer.writeln('      const scrollToBottomBtn = document.getElementById("scroll-to-bottom");');
+    buffer.writeln(
+      '      const scrollToBottomBtn = document.getElementById("scroll-to-bottom");',
+    );
     buffer.writeln('      if (scrollToBottomBtn) {');
     buffer.writeln('        scrollToBottomBtn.classList.remove("visible");');
     buffer.writeln('      }');
@@ -3307,10 +3401,14 @@ class ChatExportService {
     buffer.writeln('    function loadMoreMessages() {');
     buffer.writeln('      if (isLoading || allLoaded) return;');
     buffer.writeln('      isLoading = true;');
-    buffer.writeln('      const container = document.getElementById("messages-container");');
+    buffer.writeln(
+      '      const container = document.getElementById("messages-container");',
+    );
     buffer.writeln('      if (!container) return;');
     buffer.writeln('      const scrollHeightBefore = container.scrollHeight;');
-    buffer.writeln('      const newStart = Math.max(0, loadedStart - BATCH_SIZE);');
+    buffer.writeln(
+      '      const newStart = Math.max(0, loadedStart - BATCH_SIZE);',
+    );
     buffer.writeln('      renderMessages(newStart, loadedStart, true);');
     buffer.writeln('      loadedStart = newStart;');
     buffer.writeln('      if (newStart === 0) allLoaded = true;');
@@ -3328,22 +3426,30 @@ class ChatExportService {
     buffer.writeln('    }');
     buffer.writeln('    ');
     buffer.writeln('    function handleScroll() {');
-    buffer.writeln('      const container = document.getElementById("messages-container");');
+    buffer.writeln(
+      '      const container = document.getElementById("messages-container");',
+    );
     buffer.writeln('      if (!container) return;');
     buffer.writeln('      if (container.scrollTop < 200 && !allLoaded) {');
     buffer.writeln('        loadMoreMessages();');
     buffer.writeln('      }');
-    buffer.writeln('      const scrollToBottomBtn = document.getElementById("scroll-to-bottom");');
+    buffer.writeln(
+      '      const scrollToBottomBtn = document.getElementById("scroll-to-bottom");',
+    );
     buffer.writeln('      if (scrollToBottomBtn) {');
     buffer.writeln(
       '        const isBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;',
     );
-    buffer.writeln('        scrollToBottomBtn.classList.toggle("visible", !isBottom);');
+    buffer.writeln(
+      '        scrollToBottomBtn.classList.toggle("visible", !isBottom);',
+    );
     buffer.writeln('      }');
     buffer.writeln('    }');
     buffer.writeln('    ');
     buffer.writeln('    function scrollToBottom() {');
-    buffer.writeln('      const container = document.getElementById("messages-container");');
+    buffer.writeln(
+      '      const container = document.getElementById("messages-container");',
+    );
     buffer.writeln('      if (!container) return;');
     buffer.writeln(
       '      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });',
@@ -3374,13 +3480,21 @@ class ChatExportService {
     buffer.writeln('    ');
     buffer.writeln('    window.addEventListener("DOMContentLoaded", () => {');
     buffer.writeln('      loadInitialMessages();');
-    buffer.writeln('      const container = document.getElementById("messages-container");');
+    buffer.writeln(
+      '      const container = document.getElementById("messages-container");',
+    );
     buffer.writeln('      if (container) {');
-    buffer.writeln('        container.addEventListener("scroll", handleScroll);');
+    buffer.writeln(
+      '        container.addEventListener("scroll", handleScroll);',
+    );
     buffer.writeln('      }');
-    buffer.writeln('      const scrollToBottomBtn = document.getElementById("scroll-to-bottom");');
+    buffer.writeln(
+      '      const scrollToBottomBtn = document.getElementById("scroll-to-bottom");',
+    );
     buffer.writeln('      if (scrollToBottomBtn) {');
-    buffer.writeln('        scrollToBottomBtn.addEventListener("click", scrollToBottom);');
+    buffer.writeln(
+      '        scrollToBottomBtn.addEventListener("click", scrollToBottom);',
+    );
     buffer.writeln('      }');
     buffer.writeln('    });');
     buffer.writeln('  </script>');
@@ -3527,7 +3641,6 @@ class ChatExportService {
       return 0;
     }
   }
-
 
   String _sanitizeForExcel(String? value) {
     if (value == null || value.isEmpty) {
@@ -4627,8 +4740,7 @@ class ChatExportService {
       );
 
       try {
-        final memberRows =
-            await _loadChatroomMemberRows(contactDb, chatroomId);
+        final memberRows = await _loadChatroomMemberRows(contactDb, chatroomId);
         if (memberRows.isEmpty) {
           return results;
         }
@@ -4664,7 +4776,9 @@ class ChatExportService {
       } finally {
         await contactDb.close();
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignore
+    }
     return results;
   }
 
@@ -4675,10 +4789,8 @@ class ChatExportService {
   }) async {
     final result = <String, String>{};
 
-    final candidates = <String>{
-      username.trim(),
-      _sanitizeUsername(username),
-    }..removeWhere((c) => c.isEmpty);
+    final candidates = <String>{username.trim(), _sanitizeUsername(username)}
+      ..removeWhere((c) => c.isEmpty);
 
     final tables = ['contact', 'stranger'];
 
@@ -4694,9 +4806,7 @@ class ChatExportService {
 
         if (maps.isNotEmpty) {
           final map = maps.first;
-          final nickName = _normalizeDisplayField(
-            map['nick_name'] as String?,
-          );
+          final nickName = _normalizeDisplayField(map['nick_name'] as String?);
           final remark = _normalizeDisplayField(map['remark'] as String?);
           final alias = _normalizeDisplayField(map['alias'] as String?);
 
@@ -4758,17 +4868,14 @@ class ChatExportService {
         break;
       }
     }
-    memberTable ??= tableRows
-        .map((row) => row['name'] as String?)
-        .firstWhere(
-          (name) {
-            final lower = name?.toLowerCase() ?? '';
-            return lower == 'chatroommembers' ||
-                lower == 'chatroom_members' ||
-                lower.contains('chatroommember');
-          },
-          orElse: () => null,
-        );
+    memberTable ??= tableRows.map((row) => row['name'] as String?).firstWhere((
+      name,
+    ) {
+      final lower = name?.toLowerCase() ?? '';
+      return lower == 'chatroommembers' ||
+          lower == 'chatroom_members' ||
+          lower.contains('chatroommember');
+    }, orElse: () => null);
 
     if (memberTable == null) {
       return [];

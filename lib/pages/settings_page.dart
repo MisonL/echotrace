@@ -358,7 +358,7 @@ class _SettingsPageState extends State<SettingsPage>
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: candidates.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (context, index) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final c = candidates[index];
                   final time = fmt.format(c.modified.toLocal());
@@ -1767,8 +1767,8 @@ class _SettingsPageState extends State<SettingsPage>
           FilledButton(
             onPressed: () async {
               await AnnualReportCacheService.clearAllReports();
-              if (context.mounted) {
-                Navigator.pop(context);
+              if (context.mounted) Navigator.pop(context);
+              if (mounted) {
                 _toast.show(this.context, '已清除所有缓存');
               }
             },
@@ -1873,8 +1873,8 @@ class _SettingsPageState extends State<SettingsPage>
           FilledButton(
             onPressed: () async {
               await DualReportCacheService.clearAllReports();
-              if (context.mounted) {
-                Navigator.pop(context);
+              if (context.mounted) Navigator.pop(context);
+              if (mounted) {
                 _toast.show(this.context, '已清除所有双人年度报告缓存');
               }
             },
@@ -2081,7 +2081,7 @@ class _SettingsPageState extends State<SettingsPage>
                       await _configService.saveDebugMode(value);
                       await logger.setDebugMode(value);
 
-                      if (mounted) {
+                      if (context.mounted) {
                         _toast.show(context, '调试模式已${value ? "开启" : "关闭"}');
                       }
                     },
@@ -2221,8 +2221,8 @@ class _SettingsPageState extends State<SettingsPage>
           FilledButton(
             onPressed: () async {
               await logger.clearLogs();
-              if (context.mounted) {
-                Navigator.pop(context);
+              if (context.mounted) Navigator.pop(context);
+              if (mounted) {
                 _toast.show(this.context, '已清空日志');
                 // 刷新页面以更新日志信息
                 setState(() {});

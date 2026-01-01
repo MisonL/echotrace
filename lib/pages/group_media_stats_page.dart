@@ -64,8 +64,10 @@ class _GroupMediaStatsContentState extends State<GroupMediaStatsContent> {
 
   Future<void> _fetchMediaStats() async {
     if (!mounted) return;
-    setState(() { _isLoading = true; _mediaData = null; });
-
+    setState(() {
+      _isLoading = true;
+      _mediaData = null;
+    });
 
     try {
       final data = await _groupChatService.getGroupMediaTypeStats(
@@ -74,13 +76,17 @@ class _GroupMediaStatsContentState extends State<GroupMediaStatsContent> {
         endDate: _endDate,
       );
 
-
       if (!mounted) return;
-      setState(() { _mediaData = data; _isLoading = false; });
+      setState(() {
+        _mediaData = data;
+        _isLoading = false;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('生成统计失败: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('生成统计失败: $e')));
     }
   }
 
@@ -109,7 +115,11 @@ class _GroupMediaStatsContentState extends State<GroupMediaStatsContent> {
               ),
               ElevatedButton.icon(
                 icon: _isLoading
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.pie_chart_outline),
                 label: const Text('生成统计'),
                 onPressed: _isLoading ? null : _fetchMediaStats,
@@ -134,26 +144,32 @@ class _GroupMediaStatsContentState extends State<GroupMediaStatsContent> {
 
   Widget _buildContent() {
     if (_isLoading) {
-      return const Center(key: ValueKey('loading'), child: CircularProgressIndicator());
+      return const Center(
+        key: ValueKey('loading'),
+        child: CircularProgressIndicator(),
+      );
     }
     if (_mediaData == null) {
-      return const Center(key: ValueKey('initial'), child: Text('请选择日期范围并生成统计'));
+      return const Center(
+        key: ValueKey('initial'),
+        child: Text('请选择日期范围并生成统计'),
+      );
     }
-    
-     // --- 在这里添加过滤逻辑 ---
-    final filteredData = _mediaData!.entries
-      .where((entry) {
-        // 过滤掉数量为0的类型 和 localType为48(位置)的类型
-        return entry.value > 0 && entry.key != 48;
-      })
-      .toList()
-      ..sort((a, b) => b.value.compareTo(a.value)); // 按数量降序排序
-      
+
+    // --- 在这里添加过滤逻辑 ---
+    final filteredData = _mediaData!.entries.where((entry) {
+      // 过滤掉数量为0的类型 和 localType为48(位置)的类型
+      return entry.value > 0 && entry.key != 48;
+    }).toList()..sort((a, b) => b.value.compareTo(a.value)); // 按数量降序排序
+
     if (filteredData.isEmpty) {
       return const Center(key: ValueKey('empty'), child: Text('该时间段内无消息记录'));
     }
 
-    final totalMessages = filteredData.fold<int>(0, (sum, item) => sum + item.value);
+    final totalMessages = filteredData.fold<int>(
+      0,
+      (sum, item) => sum + item.value,
+    );
 
     return LayoutBuilder(
       key: const ValueKey('stats'),
@@ -169,7 +185,7 @@ class _GroupMediaStatsContentState extends State<GroupMediaStatsContent> {
                 ],
               )
             : SingleChildScrollView(
-              child: Column(
+                child: Column(
                   children: [
                     SizedBox(
                       height: 300,
@@ -179,7 +195,7 @@ class _GroupMediaStatsContentState extends State<GroupMediaStatsContent> {
                     _buildLegend(filteredData, totalMessages),
                   ],
                 ),
-            );
+              );
       },
     );
   }
@@ -190,11 +206,14 @@ class _GroupMediaStatsContentState extends State<GroupMediaStatsContent> {
         pieTouchData: PieTouchData(
           touchCallback: (FlTouchEvent event, pieTouchResponse) {
             setState(() {
-              if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
+              if (!event.isInterestedForInteractions ||
+                  pieTouchResponse == null ||
+                  pieTouchResponse.touchedSection == null) {
                 _touchedIndex = -1;
                 return;
               }
-              _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+              _touchedIndex =
+                  pieTouchResponse.touchedSection!.touchedSectionIndex;
             });
           },
         ),
@@ -209,7 +228,8 @@ class _GroupMediaStatsContentState extends State<GroupMediaStatsContent> {
           final isTouched = i == _touchedIndex;
           final fontSize = isTouched ? 18.0 : 14.0;
           final radius = isTouched ? 70.0 : 60.0;
-          final typeInfo = _mediaTypeInfo[type] ?? {'name': '其他', 'color': Colors.grey};
+          final typeInfo =
+              _mediaTypeInfo[type] ?? {'name': '其他', 'color': Colors.grey};
 
           return PieChartSectionData(
             color: typeInfo['color'],
@@ -234,19 +254,28 @@ class _GroupMediaStatsContentState extends State<GroupMediaStatsContent> {
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: data.length,
-      separatorBuilder: (_, __) => const Divider(height: 1, indent: 40),
+      separatorBuilder: (context, index) =>
+          const Divider(height: 1, indent: 40),
       itemBuilder: (context, index) {
         final entry = data[index];
         final type = entry.key;
         final count = entry.value;
-        final typeInfo = _mediaTypeInfo[type] ?? {'name': Message.getTypeDescriptionFromInt(type), 'color': Colors.grey, 'icon': Icons.help_outline};
+        final typeInfo =
+            _mediaTypeInfo[type] ??
+            {
+              'name': Message.getTypeDescriptionFromInt(type),
+              'color': Colors.grey,
+              'icon': Icons.help_outline,
+            };
         final percentage = (count / total * 100).toStringAsFixed(1);
         final isTouched = index == _touchedIndex;
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           decoration: BoxDecoration(
-            color: isTouched ? (typeInfo['color'] as Color).withOpacity(0.1) : Colors.transparent,
+            color: isTouched
+                ? (typeInfo['color'] as Color).withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -262,7 +291,10 @@ class _GroupMediaStatsContentState extends State<GroupMediaStatsContent> {
               ),
               Text(
                 '$count 条',
-                style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey.shade700),
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade700,
+                ),
               ),
               const SizedBox(width: 16),
               SizedBox(
